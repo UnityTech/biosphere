@@ -115,6 +115,7 @@ RSpec.describe Terraformation::TerraformProxy do
             expect(p.output["resource"]["type"]["name3"]).to eq({:foo => "test3"})
 
         end
+   
     end
 
 end

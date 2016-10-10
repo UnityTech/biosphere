@@ -29,10 +29,16 @@ RSpec.describe Terraformation::Suite do
         s = Terraformation::Suite.new("spec/terraformation/suite_test1")
         s.load_all()
 
-        FileUtils.remove_dir("build")
+        if File.directory?("build")
+            FileUtils.remove_dir("build")
+        end
         s.write_json_to("build")
         expect(JSON.parse(IO.read("build/file1.json"))["resource"]["type"]["name"]).to eq({"foo" => "file1"})
         expect(JSON.parse(IO.read("build/file2.json"))["resource"]["type"]["name"]).to eq({"foo" => "file2"})
+
+        if File.directory?("build")
+            FileUtils.remove_dir("build")
+        ende        
     end
 
 end
