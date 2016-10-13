@@ -10,8 +10,14 @@ class Terraformation
         end
 
         def method_missing(symbol, *args)
-            puts "method missing: #{symbol}"
+            #puts "method missing: #{symbol}, #{args}"
 
+            # Support getter here
+            if args.length == 0
+                return @output[symbol]
+            end
+
+            # Support setter here
             if [:ingress, :egress].include?(symbol)
                 @output[symbol] ||= []
                 if args[0].kind_of?(Array)

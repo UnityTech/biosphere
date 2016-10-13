@@ -38,7 +38,7 @@ RSpec.describe Terraformation::Suite do
 
         if File.directory?("build")
             FileUtils.remove_dir("build")
-        ende        
+        end        
     end
 
 end

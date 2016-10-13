@@ -100,7 +100,20 @@ RSpec.describe Terraformation::TerraformProxy do
             expect(p.output["resource"]["type"]["name"][:ingress][0][:test]).to eq("first")
             expect(p.output["resource"]["type"]["name"][:ingress][1][:test]).to eq("second")
             expect(p.output["resource"]["type"]["name"][:ingress][2][:test]).to eq("3rd")
-        end        
+        end 
+
+        it "can refer to an already set property later in resource definition block" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                resource "type", "name" do
+                    name "one"
+                    bar name
+                end
+            end
+            expect(p.output["resource"]["type"]["name"][:name]).to eq("one")
+            expect(p.output["resource"]["type"]["name"][:bar]).to eq("one")
+
+        end       
 
     end
 
