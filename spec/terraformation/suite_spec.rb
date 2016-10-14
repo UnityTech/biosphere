@@ -13,16 +13,16 @@ RSpec.describe Terraformation::Suite do
         s = Terraformation::Suite.new("spec/terraformation/suite_test1")
         s.load_all()
 
-        expect(s.files["file1.rb"].output["resource"]["type"]["name"]).to eq({:foo => "file1"})
-        expect(s.files["file2.rb"].output["resource"]["type"]["name"]).to eq({:foo => "file2"})
+        expect(s.files["file1.rb"].export["resource"]["type"]["name"]).to eq({:foo => "file1"})
+        expect(s.files["file2.rb"].export["resource"]["type"]["name"]).to eq({:foo => "file2"})
     end
 
     it "require_relative works with suite" do
         s = Terraformation::Suite.new("spec/terraformation/suite_test2")
         s.load_all()
 
-        expect(s.files["main_file.rb"].output["resource"]["type"]["name1"]).to eq({:foo => "I'm Garo"})
-        expect(s.files["main_file.rb"].output["resource"]["type"]["name2"]).to eq({:property => "test"})
+        expect(s.files["main_file.rb"].export["resource"]["type"]["name1"]).to eq({:foo => "I'm Garo"})
+        expect(s.files["main_file.rb"].export["resource"]["type"]["name2"]).to eq({:property => "test"})
     end    
 
     it "can write suite into a build directory" do
@@ -33,8 +33,8 @@ RSpec.describe Terraformation::Suite do
             FileUtils.remove_dir("build")
         end
         s.write_json_to("build")
-        expect(JSON.parse(IO.read("build/file1.json"))["resource"]["type"]["name"]).to eq({"foo" => "file1"})
-        expect(JSON.parse(IO.read("build/file2.json"))["resource"]["type"]["name"]).to eq({"foo" => "file2"})
+        expect(JSON.parse(IO.read("build/file1.json.tf"))["resource"]["type"]["name"]).to eq({"foo" => "file1"})
+        expect(JSON.parse(IO.read("build/file2.json.tf"))["resource"]["type"]["name"]).to eq({"foo" => "file2"})
 
         if File.directory?("build")
             FileUtils.remove_dir("build")

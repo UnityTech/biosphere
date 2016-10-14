@@ -57,7 +57,7 @@ if ARGV[0] == "json" && ARGV[1]
 
 	count = 0
 	suite.write_json_to(options.build) do |file_name, destination, str, proxy|
-		puts "Wrote #{str.length} bytes from #{file_name} to #{destination} (#{proxy.output["resource"].length} resources)"
+		puts "Wrote #{str.length} bytes from #{file_name} to #{destination} (#{proxy.export["resource"].length} resources)"
 		count = count + 1
 	end
 

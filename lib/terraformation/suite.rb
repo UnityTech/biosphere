@@ -30,7 +30,7 @@ class Terraformation
 			end
 
 			@files.each do |file_name, proxy|
-				json_name = file_name[0..-4] + ".json"
+				json_name = file_name[0..-4] + ".json.tf"
 				str = proxy.to_json(true) + "\n"
 				destination_name = destination_dir + "/" + json_name
 				File.write(destination_name, str)

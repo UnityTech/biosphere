@@ -32,14 +32,16 @@ class Terraformation
     end
     class TerraformProxy
 
-        attr_accessor :output
-        attr_reader :output
+        attr_accessor :export
+
 
         def initialize(script_name)
             @script_name = script_name
-            @output = {
+            @export = {
                 "provider" => {},
-                "resource" => {}
+                "resource" => {},
+                "variable" => {},
+                "output" => {}
             }
 
         end
@@ -56,12 +58,24 @@ class Terraformation
         include Terraformation::Mixing::FromFile
 
         def provider(name, spec={})
-            @output["provider"][name.to_s] = spec
+            @export["provider"][name.to_s] = spec
         end
 
+        def variable(name, value)
+            @export["variable"][name] = {
+                "default" => value
+            }
+        end
+
+        def output(name, value)
+            @export["output"][name] = {
+                "value" => value
+            }
+        end        
+
         def resource(type, name, spec={}, &block)
-            @output["resource"][type.to_s] ||= {}
-            if @output["resource"][type.to_s][name.to_s]
+            @export["resource"][type.to_s] ||= {}
+            if @export["resource"][type.to_s][name.to_s]
                 throw "Tried to create a resource of type #{type} called '#{name}' when one already exists"
             end
 
@@ -75,7 +89,7 @@ class Terraformation
 
             end
 
-            @output["resource"][type.to_s][name.to_s] = spec
+            @export["resource"][type.to_s][name.to_s] = spec
 
         end
 
@@ -99,9 +113,9 @@ class Terraformation
 
         def to_json(pretty=false)
             if pretty
-                return JSON.pretty_generate(@output)
+                return JSON.pretty_generate(@export)
             else
-                return JSON.generate(@output)
+                return JSON.generate(@export)
             end
         end
     end
@@ -109,5 +123,5 @@ end
 
 #at_exit do
 #  require 'json'
-#  puts JSON.pretty_generate(@output)
+#  puts JSON.pretty_generate(@export)
 #end
