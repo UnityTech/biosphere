@@ -21,3 +21,4 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.executables << "terraformation"
   s.add_development_dependency('rspec', '3.4.0')
+  s.add_dependency('ipaddress', '0.8.3')
