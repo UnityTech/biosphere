@@ -18,7 +18,7 @@ class Terraformation
             end
 
             # Support setter here
-            if [:ingress, :egress].include?(symbol)
+            if [:ingress, :egress, :route].include?(symbol)
                 @output[symbol] ||= []
                 if args[0].kind_of?(Array)
                     @output[symbol] += args[0]
