@@ -73,11 +73,13 @@ class Terraformation
             }
         end        
 
-        def resource(type, name, spec={}, &block)
+        def resource(type, name, &block)
             @export["resource"][type.to_s] ||= {}
             if @export["resource"][type.to_s][name.to_s]
                 throw "Tried to create a resource of type #{type} called '#{name}' when one already exists"
             end
+
+            spec = {}
 
             if block_given?
                 proxy = ResourceProxy.new
@@ -87,6 +89,8 @@ class Terraformation
                     spec[key] = value
                 end
 
+            else
+                STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")               
             end
 
             @export["resource"][type.to_s][name.to_s] = spec

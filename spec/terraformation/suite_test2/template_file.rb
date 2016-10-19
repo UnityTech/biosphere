@@ -1,7 +1,8 @@
 
 def helper_function(variable)
-	resource "type", "name1",
-		foo: "I'm #{variable}"
+	resource "type", "name1" do
+		foo "I'm #{variable}"
+	end
 
 end
 

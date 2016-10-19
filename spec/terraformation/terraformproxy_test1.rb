@@ -1,4 +1,5 @@
 
-resource "type", "name",
-         foo: "one",
-         bar: false
+resource "type", "name" do
+    foo "one"
+    bar false
+end

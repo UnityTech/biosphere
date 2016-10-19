@@ -1,3 +1,4 @@
 
-resource "type", "name",
-         foo: "file2"
+resource "type", "name" do
+    foo "file2"
+end

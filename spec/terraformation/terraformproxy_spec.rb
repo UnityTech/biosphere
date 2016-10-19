@@ -13,9 +13,10 @@ RSpec.describe Terraformation::TerraformProxy do
     it "can evaluate block" do
         p = Terraformation::TerraformProxy.new("test")
         p.load_from_block do
-            resource "type", "name",
-                     foo: "one",
-                     bar: true
+            resource "type", "name" do
+                foo "one"
+                bar true
+            end
         end
 
         expect(p.export["resource"]["type"]["name"]).to eq({:foo => "one", :bar=> true})
