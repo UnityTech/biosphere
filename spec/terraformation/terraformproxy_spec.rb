@@ -6,7 +6,7 @@ RSpec.describe Terraformation::TerraformProxy do
     it "can evaluate file" do
         p = Terraformation::TerraformProxy.new("spec/terraformation/terraformproxy_test1.rb")
         p.load_from_file()
-
+        p.evaluate_resources()
         expect(p.export["resource"]["type"]["name"]).to eq({:foo => "one", :bar=> false})
     end
 
@@ -19,6 +19,7 @@ RSpec.describe Terraformation::TerraformProxy do
             end
         end
 
+        p.evaluate_resources()
         expect(p.export["resource"]["type"]["name"]).to eq({:foo => "one", :bar=> true})
     end
 
@@ -43,6 +44,8 @@ RSpec.describe Terraformation::TerraformProxy do
                 end
             end
 
+            p.evaluate_resources()
+
             expect(p.export["resource"]["type"]["name"][:foo]).to eq("one")
             expect(p.export["resource"]["type"]["name"][:bar]).to eq(true)
             expect(p.export["resource"]["type"]["name"][:ingress][0][:from_port]).to eq(0)
@@ -66,6 +69,7 @@ RSpec.describe Terraformation::TerraformProxy do
                     
                 end
             end
+            p.evaluate_resources()
 
             expect(p.export["resource"]["type"]["name"][:foo]).to eq("one")
             expect(p.export["resource"]["type"]["name"][:bar]).to eq(true)
@@ -95,6 +99,7 @@ RSpec.describe Terraformation::TerraformProxy do
                     
                 end
             end
+            p.evaluate_resources()
 
             expect(p.export["resource"]["type"]["name"][:foo]).to eq("one")
             expect(p.export["resource"]["type"]["name"][:bar]).to eq(true)
@@ -111,10 +116,25 @@ RSpec.describe Terraformation::TerraformProxy do
                     bar name
                 end
             end
+            p.evaluate_resources()
+            
             expect(p.export["resource"]["type"]["name"][:name]).to eq("one")
             expect(p.export["resource"]["type"]["name"][:bar]).to eq("one")
+        end
 
-        end       
+        it "can handle scoping" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                the_name = "one"
+                resource "type", "name" do
+                    name the_name
+                end
+            end
+            p.evaluate_resources()
+            
+            expect(p.export["resource"]["type"]["name"][:name]).to eq("one")
+            
+        end
 
     end
 
@@ -123,6 +143,7 @@ RSpec.describe Terraformation::TerraformProxy do
 
             p = Terraformation::TerraformProxy.new("spec/terraformation/suite_test2/main_file.rb")
             p.load_from_file()
+            p.evaluate_resources()
 
             expect(p.export["resource"]["type"]["name1"]).to eq({:foo => "I'm Garo"})
             expect(p.export["resource"]["type"]["name2"]).to eq({:property => "test"})
@@ -130,6 +151,21 @@ RSpec.describe Terraformation::TerraformProxy do
 
         end
    
+    end
+
+    describe("actions") do
+        it "is possible to define an action" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                action "init", "Description what this does"
+            end
+            
+            expect(p.actions["init"]).not_to be_empty
+            expect(p.actions["init"][:name]).to eq("init")
+            expect(p.actions["init"][:description]).to eq("Description what this does")
+            
+
+        end
     end
 
     describe("expose outputs") do

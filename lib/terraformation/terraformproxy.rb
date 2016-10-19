@@ -33,6 +33,8 @@ class Terraformation
     class TerraformProxy
 
         attr_accessor :export
+        attr_accessor :resources
+        attr_accessor :actions
 
 
         def initialize(script_name)
@@ -43,6 +45,8 @@ class Terraformation
                 "variable" => {},
                 "output" => {}
             }
+            @resources = []
+            @actions = {}
 
         end
 
@@ -71,7 +75,15 @@ class Terraformation
             @export["output"][name] = {
                 "value" => value
             }
-        end        
+        end
+
+        def action(name, description, &block)
+            @actions[name] = {
+                :name => name,
+                :description => description,
+                :block => block
+            }
+        end
 
         def resource(type, name, &block)
             @export["resource"][type.to_s] ||= {}
@@ -80,21 +92,30 @@ class Terraformation
             end
 
             spec = {}
+            resource = {
+                :name => name,
+                :type => type
+            }
 
             if block_given?
-                proxy = ResourceProxy.new
-                proxy.instance_eval(&block)
-
-                proxy.output.each do |key, value|
-                    spec[key] = value
-                end
-
+                resource[:block] = block
             else
                 STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")               
             end
 
-            @export["resource"][type.to_s][name.to_s] = spec
+            
 
+            @resources << resource
+
+        end
+
+        def evaluate_resources()
+            @resources.each do |resource|
+                proxy = ResourceProxy.new
+                proxy.instance_eval(&resource[:block])
+
+                @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
+            end
         end
 
         def id_of(type,name)

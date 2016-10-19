@@ -39,6 +39,8 @@ class TerraformationOpts
 
 end
 
+
+
 options = TerraformationOpts.parse(ARGV)
 
 if ARGV.length == 0

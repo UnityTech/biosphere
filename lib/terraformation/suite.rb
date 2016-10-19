@@ -21,6 +21,7 @@ class Terraformation
 		def load_all()
 			@files.each do |file_name, proxy|
 				proxy.load_from_file()
+				proxy.evaluate_resources()
 			end
 		end
 
