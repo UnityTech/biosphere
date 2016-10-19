@@ -22,3 +22,4 @@ Gem::Specification.new do |s|
   s.executables << "terraformation"
   s.add_development_dependency('rspec', '3.4.0')
   s.add_dependency('ipaddress', '0.8.3')
+  s.add_dependency('awesome_print', '1.7.0')

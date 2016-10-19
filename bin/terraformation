@@ -4,6 +4,7 @@ require 'terraformation'
 require 'optparse'
 require 'ostruct'
 require 'pp'
+require "awesome_print"
 
 class TerraformationOpts
 
@@ -19,6 +20,7 @@ class TerraformationOpts
 
 			opts.separator ""
 			opts.separator "Commands:"
+			opts.separator "\tplan\tRun the planning phase"
 			opts.separator "\tjson\tWrite tf files as json into build directory"
 			opts.separator "\taction [action]\tCall an action defined in the application .rb files"
 			opts.separator ""
@@ -77,6 +79,15 @@ if ARGV[0] == "json" && options.src
 
 	puts "Wrote #{count} files into #{options.build}"
 
+end
+
+if ARGV[0] == "plan" && options.src
+	suite = Terraformation::Suite.new(options.src)
+	suite.load_all()
+
+	suite.evaluate_plans()
+
+	ap suite.node
 end
 
 if ARGV[0] == "action" && options.src

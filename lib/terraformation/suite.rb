@@ -13,12 +13,23 @@ class Terraformation
 
 			files = Dir::glob("#{directory}/*.rb")
 
+			@plan_proxy = PlanProxy.new
+
 			for file in files
-				proxy = Terraformation::TerraformProxy.new(file)
+				proxy = Terraformation::TerraformProxy.new(file, @plan_proxy)
 
 				@files[file[directory.length+1..-1]] = proxy
 			end
 		end
+
+		def node(name=nil)
+			if name
+				return @plan_proxy.node[name]
+			else
+				return @plan_proxy.node
+			end
+		end
+
 
 		def evaluate_resources()
 			@files.each do |file_name, proxy|
@@ -37,6 +48,15 @@ class Terraformation
 					end
 					@actions[key] = value
 				end
+			end
+		end
+
+
+		def evaluate_plans()
+			@files.each do |file_name, proxy|
+				puts "evaluating plans for #{file_name}"
+				
+				proxy.evaluate_plans()
 			end
 		end
 

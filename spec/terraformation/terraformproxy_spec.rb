@@ -23,6 +23,16 @@ RSpec.describe Terraformation::TerraformProxy do
         expect(p.export["resource"]["type"]["name"]).to eq({:foo => "one", :bar=> true})
     end
 
+    it "supports node outside resource or plan definition" do
+        p = Terraformation::TerraformProxy.new("test")
+        p.load_from_block do
+            node[:settings] = true
+        end
+
+        expect(p.node[:settings]).to eq(true)
+
+    end
+
     describe "resource" do
         it "can use block notation" do
             p = Terraformation::TerraformProxy.new("test")
@@ -138,6 +148,20 @@ RSpec.describe Terraformation::TerraformProxy do
 
     end
 
+    describe("plan") do
+        it "can execute a plan" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                plan "world domination" do
+                    node[:name] = "test"
+                end
+            end
+
+            p.evaluate_plans()
+            expect(p.node[:name]).to eq("test")
+        end
+    end
+
     describe("included templates") do
         it("is possible to include a file with a function and define resources via that function") do
 
@@ -163,7 +187,6 @@ RSpec.describe Terraformation::TerraformProxy do
             expect(p.actions["init"]).not_to be_empty
             expect(p.actions["init"][:name]).to eq("init")
             expect(p.actions["init"][:description]).to eq("Description what this does")
-            
 
         end
     end
@@ -190,6 +213,48 @@ RSpec.describe Terraformation::TerraformProxy do
             expect(p.export["variable"]["foobar"]["default"]).to eq("Hello, World!")
 
         end
+    end
+
+    describe("load") do
+
+        it "can load a file which ends in .rb" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                load "spec/terraformation/suite_test2/lib/template_file.rb"
+            end
+
+            expect(p.actions["template_action"][:name]).to eq("template_action")
+        end
+
+        it "can load a file which does not ends in .rb" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                load "spec/terraformation/suite_test2/lib/template_file"
+            end
+
+            expect(p.actions["template_action"][:name]).to eq("template_action")
+        end
+
+        it "can load a file which defines a function and then use that function" do
+            p = Terraformation::TerraformProxy.new("test")
+
+            p.load_from_block do
+                puts "Going to load test.rb"
+                load "spec/terraformation/suite_load/test.rb"
+
+                def delegator(str)
+                    return duplicate_string(str)
+                end
+
+                resource "type", "name" do
+                    payload delegator("foo")
+                end
+            end
+            p.evaluate_resources()
+
+            expect(p.export["resource"]["type"]["name"][:payload]).to eq("foofoo")
+        end        
+        
     end
 
 

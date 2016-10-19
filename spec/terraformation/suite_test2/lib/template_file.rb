@@ -19,3 +19,7 @@ end
 action "template_action", "test" do
 	puts "template_action called"
 end
+
+plan "the plan" do
+	node[:plan] = true
+end

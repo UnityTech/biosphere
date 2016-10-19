@@ -35,6 +35,14 @@ RSpec.describe Terraformation::Suite do
         expect(s.actions["two"][:name]).to eq("two")
     end
 
+    it "can plan all from all files" do
+        s = Terraformation::Suite.new("spec/terraformation/suite_test2")
+        s.load_all()
+        s.evaluate_plans()
+
+        expect(s.node[:plan]).to eq(true)
+    end    
+
     it "can write suite into a build directory" do
         s = Terraformation::Suite.new("spec/terraformation/suite_test1")
         s.load_all()
