@@ -12,6 +12,7 @@ RSpec.describe Terraformation::Suite do
     it "can go over a list of files in a single directory" do
         s = Terraformation::Suite.new("spec/terraformation/suite_test1")
         s.load_all()
+        s.evaluate_resources()
 
         expect(s.files["file1.rb"].export["resource"]["type"]["name"]).to eq({:foo => "file1"})
         expect(s.files["file2.rb"].export["resource"]["type"]["name"]).to eq({:foo => "file2"})
@@ -20,14 +21,24 @@ RSpec.describe Terraformation::Suite do
     it "require_relative works with suite" do
         s = Terraformation::Suite.new("spec/terraformation/suite_test2")
         s.load_all()
+        s.evaluate_resources()
 
         expect(s.files["main_file.rb"].export["resource"]["type"]["name1"]).to eq({:foo => "I'm Garo"})
         expect(s.files["main_file.rb"].export["resource"]["type"]["name2"]).to eq({:property => "test"})
-    end    
+    end
+
+    it "can find action from all files" do
+        s = Terraformation::Suite.new("spec/terraformation/suite_test1")
+        s.load_all()
+
+        expect(s.actions["one"][:name]).to eq("one")
+        expect(s.actions["two"][:name]).to eq("two")
+    end
 
     it "can write suite into a build directory" do
         s = Terraformation::Suite.new("spec/terraformation/suite_test1")
         s.load_all()
+        s.evaluate_resources()
 
         if File.directory?("build")
             FileUtils.remove_dir("build")

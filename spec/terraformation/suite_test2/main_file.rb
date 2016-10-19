@@ -1,5 +1,5 @@
 
-require_relative './template_file.rb'
+load 'lib/template_file.rb'
 
 my_template("Garo")
 

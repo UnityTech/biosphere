@@ -18,14 +18,20 @@ class TerraformationOpts
 			opts.banner = "Usage: \"terraformation [options] <action>\""
 
 			opts.separator ""
-			opts.separator "Actions:"
+			opts.separator "Commands:"
 			opts.separator "\tjson\tWrite tf files as json into build directory"
+			opts.separator "\taction [action]\tCall an action defined in the application .rb files"
 			opts.separator ""
 
 			opts.on_tail("-h", "--help", "Show this message") do
 				puts opts
 				exit
 			end
+
+			opts.on("--src PATH", "Directory where the application .rb files are") do |path|
+				options.src = path
+			end
+
 
 			opts.on("--build PATH", "Directory where to build json files") do |path|
 				options.build = path
@@ -48,8 +54,14 @@ if ARGV.length == 0
 	exit -1
 end
 
-if ARGV[0] == "json" && ARGV[1]
-	suite = Terraformation::Suite.new(ARGV[1])
+if !File.directory?(options.src)
+	STDERR.puts "Directory #{options.build} is not a directory or it doesn't exists."
+	exit -1
+end
+
+
+if ARGV[0] == "json" && options.src
+	suite = Terraformation::Suite.new(options.src)
 	suite.load_all()
 
 	if !File.directory?(options.build)
@@ -65,5 +77,29 @@ if ARGV[0] == "json" && ARGV[1]
 
 	puts "Wrote #{count} files into #{options.build}"
 
+end
+
+if ARGV[0] == "action" && options.src
+	puts "options.src: #{options.src}"
+	suite = Terraformation::Suite.new(options.src)
+	suite.load_all()
+
+	class ActionContext
+		attr_accessor :build_directory
+		def initialize()
+
+		end
+	end
+
+	action = suite.actions[ARGV[1]]
+	if action
+		context = ActionContext.new()
+
+		context.build_directory = options.build
+
+		context.instance_eval(&action[:block])
+	else
+		STDERR.puts("Action #{ARGV[1]} not found")
+	end
 end
 

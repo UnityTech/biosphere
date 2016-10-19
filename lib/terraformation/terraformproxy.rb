@@ -30,15 +30,18 @@ class Terraformation
             end
         end
     end
+
     class TerraformProxy
 
         attr_accessor :export
         attr_accessor :resources
         attr_accessor :actions
+        attr_reader :src_path
 
 
         def initialize(script_name)
             @script_name = script_name
+            @src_path = File.dirname(script_name)
             @export = {
                 "provider" => {},
                 "resource" => {},
@@ -56,6 +59,10 @@ class Terraformation
 
         def load_from_block(&block)
             self.instance_eval(&block)
+        end
+
+        def load(filename)
+            self.from_file(@src_path + "/" + filename)
         end
 
 
@@ -81,7 +88,8 @@ class Terraformation
             @actions[name] = {
                 :name => name,
                 :description => description,
-                :block => block
+                :block => block,
+                :location => caller[0]
             }
         end
 
@@ -94,7 +102,8 @@ class Terraformation
             spec = {}
             resource = {
                 :name => name,
-                :type => type
+                :type => type,
+                :location => caller[0] + "a"
             }
 
             if block_given?

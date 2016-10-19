@@ -15,3 +15,7 @@ def my_template(variable)
 	end
 
 end
+
+action "template_action", "test" do
+	puts "template_action called"
+end
