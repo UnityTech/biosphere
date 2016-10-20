@@ -60,4 +60,21 @@ RSpec.describe Terraformation::Suite do
         end        
     end
 
+    it "can save node from file" do
+        s = Terraformation::Suite.new("spec/terraformation/suite_node_save")
+        s.load_all()
+
+        if File.exists?("spec/terraformation/suite_node_save/state.node")
+            File.delete("spec/terraformation/suite_node_save/state.node")
+        end
+        s.save_node("state.node")
+
+        expect(File.exists?("spec/terraformation/suite_node_save/state.node")).to eq(true)
+    end
+
+    it "can load node from file automatically" do
+        s = Terraformation::Suite.new("spec/terraformation/suite_node_load")
+        expect(s.node[:foo]).to eq("bar")
+    end
+
 end

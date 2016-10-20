@@ -146,6 +146,22 @@ RSpec.describe Terraformation::TerraformProxy do
             
         end
 
+        it "can call function defined outside of the resource block" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                def foo()
+                    return "bar"
+                end
+                
+                resource "type", "name" do
+                    name foo()
+                end
+            end
+            p.evaluate_resources()
+            
+            expect(p.export["resource"]["type"]["name"][:name]).to eq("bar")
+            
+        end
     end
 
     describe("plan") do
@@ -189,6 +205,30 @@ RSpec.describe Terraformation::TerraformProxy do
             expect(p.actions["init"][:description]).to eq("Description what this does")
 
         end
+
+        it "can use function defined outside the action" do
+            p = Terraformation::TerraformProxy.new("test")
+            p.load_from_block do
+                def foo()
+                    return "bar"
+                end
+                action "init", "Description what this does" do
+                    foo()
+                end
+            end
+            
+            expect(p.actions["init"]).not_to be_empty
+            expect(p.actions["init"][:name]).to eq("init")
+            expect(p.actions["init"][:description]).to eq("Description what this does")
+            
+            context = Terraformation::ActionContext.new()
+
+            p.call_action("init", context)
+
+            
+                
+
+        end        
     end
 
     describe("expose outputs") do

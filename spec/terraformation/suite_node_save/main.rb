@@ -1,0 +1,2 @@
+
+node[:foo] = "bar"

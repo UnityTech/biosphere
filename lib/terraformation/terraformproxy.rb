@@ -3,10 +3,30 @@ require 'json'
 require 'pathname'
 
 class Terraformation
+    class ActionContext
+        attr_accessor :build_directory
+        attr_accessor :caller
+
+        def initialize()
+
+        end
+
+        def method_missing(symbol, *args)
+            #puts ">>>>>>>> method missing: #{symbol}, #{args}"
+
+            if @caller.methods.include?(symbol)
+                return @caller.method(symbol).call(*args)
+            end
+        end
+
+        
+    end
+
+    
     class PlanProxy
         attr_accessor :node
         def initialize()
-            @node = Hash.new{ |h,k| h[k] = Hash.new(&h.default_proc) }
+            @node = Node.new
         end
 
     end
@@ -153,6 +173,12 @@ class Terraformation
                 @plan_proxy.instance_eval(&resource[:block])
             end
             
+        end
+
+        def call_action(name, context)
+            context.caller = self
+
+            context.instance_eval(&@actions[name][:block])
         end
 
         def resource(type, name, &block)

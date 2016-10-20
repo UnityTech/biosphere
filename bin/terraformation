@@ -12,6 +12,7 @@ class TerraformationOpts
 
 		options = OpenStruct.new
 		options.build = "build"
+		options.src = "./"
 
 		opt_parser = OptionParser.new do |opts|
 
@@ -61,10 +62,15 @@ if !File.directory?(options.src)
 	exit -1
 end
 
+if options.src
+	suite = Terraformation::Suite.new(options.src)
+	suite.load_all()	
+else
+	STDERR.puts "No --src set"
+end
 
 if ARGV[0] == "json" && options.src
-	suite = Terraformation::Suite.new(options.src)
-	suite.load_all()
+	suite.evaluate_resources()
 
 	if !File.directory?(options.build)
 		STDERR.puts "Directory #{options.build} is not a directory or it doesn't exists."
@@ -82,35 +88,17 @@ if ARGV[0] == "json" && options.src
 end
 
 if ARGV[0] == "plan" && options.src
-	suite = Terraformation::Suite.new(options.src)
-	suite.load_all()
-
 	suite.evaluate_plans()
-
 	ap suite.node
 end
 
 if ARGV[0] == "action" && options.src
-	puts "options.src: #{options.src}"
-	suite = Terraformation::Suite.new(options.src)
-	suite.load_all()
+	context = Terraformation::ActionContext.new()
 
-	class ActionContext
-		attr_accessor :build_directory
-		def initialize()
+	context.build_directory = options.build
 
-		end
-	end
+	suite.call_action(ARGV[1], context)
 
-	action = suite.actions[ARGV[1]]
-	if action
-		context = ActionContext.new()
-
-		context.build_directory = options.build
-
-		context.instance_eval(&action[:block])
-	else
-		STDERR.puts("Action #{ARGV[1]} not found")
-	end
+	suite.save_node()
 end
 

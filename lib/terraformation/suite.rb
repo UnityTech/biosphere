@@ -1,4 +1,5 @@
 require 'pp'
+require 'ipaddress'
 
 class Terraformation
 	class Suite
@@ -10,6 +11,7 @@ class Terraformation
 
 			@files = {}
 			@actions = {}
+			@directory = directory
 
 			files = Dir::glob("#{directory}/*.rb")
 
@@ -19,6 +21,10 @@ class Terraformation
 				proxy = Terraformation::TerraformProxy.new(file, @plan_proxy)
 
 				@files[file[directory.length+1..-1]] = proxy
+			end
+
+			if File.exists?(directory + "/state.node")
+				@plan_proxy.node = Marshal.load(File.read(directory + "/state.node"))
 			end
 		end
 
@@ -51,12 +57,25 @@ class Terraformation
 			end
 		end
 
+		def save_node(filename = "state.node")
+			str = Marshal.dump(@plan_proxy.node)
+			File.write(@directory + "/" + filename, str)
+		end
+
 
 		def evaluate_plans()
 			@files.each do |file_name, proxy|
 				puts "evaluating plans for #{file_name}"
 				
 				proxy.evaluate_plans()
+			end
+		end
+
+		def call_action(name, context)
+			@files.each do |file_name, proxy|
+				if proxy.actions[name]
+					proxy.call_action(name, context)
+				end
 			end
 		end
 
