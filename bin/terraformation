@@ -64,7 +64,7 @@ end
 
 if options.src
 	suite = Terraformation::Suite.new(options.src)
-	suite.load_all()	
+	suite.load_all()
 else
 	STDERR.puts "No --src set"
 end
@@ -84,6 +84,7 @@ if ARGV[0] == "json" && options.src
 	end
 
 	puts "Wrote #{count} files into #{options.build}"
+	suite.save_node()
 
 end
 
