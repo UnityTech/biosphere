@@ -64,10 +64,20 @@ end
 
 if options.src
 	suite = Biosphere::Suite.new(options.src)
+	if options.src == "./"
+		STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
+	end
+
 	suite.load_all()
-else
-	STDERR.puts "No --src set"
 end
+
+if options.build
+	if !File.directory?(options.build)
+		STDERR.puts "Creating build directory #{options.build} because it was missing"
+		Dir.mkdir(options.build)
+	end
+end
+
 
 if ARGV[0] == "json" && options.src
 	suite.evaluate_resources()
@@ -90,7 +100,7 @@ end
 
 if ARGV[0] == "plan" && options.src
 	suite.evaluate_plans()
-	ap suite.node
+	ap suite.node, :indent=>-4
 end
 
 if ARGV[0] == "action" && options.src
@@ -98,6 +108,7 @@ if ARGV[0] == "action" && options.src
 
 	context.build_directory = options.build
 
+	STDERR.puts "Executing action #{ARGV[1]}"
 	suite.call_action(ARGV[1], context)
 
 	suite.save_node()
