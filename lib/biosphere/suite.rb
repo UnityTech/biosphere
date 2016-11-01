@@ -42,6 +42,7 @@ class Biosphere
 			@files.each do |file_name, proxy|
 				proxy.evaluate_resources()
 			end
+
 		end
 
 		def load_all()
@@ -56,6 +57,8 @@ class Biosphere
 					@actions[key] = value
 				end
 			end
+
+			return @files.length
 		end
 
 		def save_node(filename = "state.node")

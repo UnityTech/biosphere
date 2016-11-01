@@ -13,6 +13,7 @@ class BiosphereOpts
 		options = OpenStruct.new
 		options.build = "build"
 		options.src = "./"
+		options.version = ::Biosphere::Version
 
 		opt_parser = OptionParser.new do |opts|
 
@@ -68,7 +69,10 @@ if options.src
 		STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
 	end
 
-	suite.load_all()
+	if suite.load_all() == 0
+		STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
+		exit -1
+	end
 end
 
 if options.build
