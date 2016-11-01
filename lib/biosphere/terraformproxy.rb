@@ -1,6 +1,8 @@
 require 'biosphere/mixing/from_file.rb'
 require 'json'
 require 'pathname'
+require 'base64'
+require 'zlib'
 
 class Biosphere
     class ActionContext
@@ -19,10 +21,10 @@ class Biosphere
             end
         end
 
-        
+
     end
 
-    
+
     class PlanProxy
         attr_accessor :node
         def initialize()
@@ -67,6 +69,11 @@ class Biosphere
                 end
             else
                 @output[symbol] = args[0]
+            end
+
+            # We need to first gzip and then base64-encode the user_data string to work around the 16kb size limitation in AWS
+            if symbol === :user_data
+              @output[symbol] = Base64.strict_encode64(Zlib::Deflate.new(nil, 31).deflate(args[0], Zlib::FINISH))
             end
         end
     end
@@ -113,7 +120,7 @@ class Biosphere
             src_path = Pathname.new(@src_path.last + "/" + File.dirname(filename)).cleanpath.to_s
             # Push current src_path and overwrite @src_path so that it tracks recursive loads
             @src_path << src_path
-            
+
             #puts "Trying to open file: " + src_path + "/" + File.basename(filename)
             if File.exists?(src_path + "/" + File.basename(filename))
                 self.from_file(src_path + "/" + File.basename(filename))
@@ -166,13 +173,13 @@ class Biosphere
 
         def node
             return @plan_proxy.node
-        end        
-        
+        end
+
         def evaluate_plans()
             @plans.each do |resource|
                 @plan_proxy.instance_eval(&resource[:block])
             end
-            
+
         end
 
         def call_action(name, context)
@@ -197,10 +204,10 @@ class Biosphere
             if block_given?
                 resource[:block] = block
             else
-                STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")               
+                STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")
             end
 
-            
+
 
             @resources << resource
 
