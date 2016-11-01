@@ -1,7 +1,8 @@
 require 'pp'
 require 'ipaddress'
+require 'biosphere/node'
 
-class Terraformation
+class Biosphere
 	class Suite
 
 		attr_accessor :files
@@ -18,7 +19,7 @@ class Terraformation
 			@plan_proxy = PlanProxy.new
 
 			for file in files
-				proxy = Terraformation::TerraformProxy.new(file, @plan_proxy)
+				proxy = Biosphere::TerraformProxy.new(file, @plan_proxy)
 
 				@files[file[directory.length+1..-1]] = proxy
 			end

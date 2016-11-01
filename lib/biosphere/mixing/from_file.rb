@@ -1,5 +1,5 @@
 
-class Terraformation
+class Biosphere
     module Mixing
         module FromFile
             def from_file(filename)

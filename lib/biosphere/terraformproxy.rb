@@ -1,8 +1,8 @@
-require 'terraformation/mixing/from_file.rb'
+require 'biosphere/mixing/from_file.rb'
 require 'json'
 require 'pathname'
 
-class Terraformation
+class Biosphere
     class ActionContext
         attr_accessor :build_directory
         attr_accessor :caller
@@ -128,7 +128,7 @@ class Terraformation
         end
 
 
-        include Terraformation::Mixing::FromFile
+        include Biosphere::Mixing::FromFile
 
         def provider(name, spec={})
             @export["provider"][name.to_s] = spec

@@ -1,12 +1,12 @@
 #!/usr/bin/ruby
 
-require 'terraformation'
+require 'biosphere'
 require 'optparse'
 require 'ostruct'
 require 'pp'
 require "awesome_print"
 
-class TerraformationOpts
+class BiosphereOpts
 
 	def self.parse(args)
 
@@ -17,7 +17,7 @@ class TerraformationOpts
 		opt_parser = OptionParser.new do |opts|
 
 
-			opts.banner = "Usage: \"terraformation [options] <action>\""
+			opts.banner = "Usage: \"biosphere [options] <action>\""
 
 			opts.separator ""
 			opts.separator "Commands:"
@@ -50,7 +50,7 @@ end
 
 
 
-options = TerraformationOpts.parse(ARGV)
+options = BiosphereOpts.parse(ARGV)
 
 if ARGV.length == 0
 	STDERR.puts "No action spesified. Use -h to get help."
@@ -63,7 +63,7 @@ if !File.directory?(options.src)
 end
 
 if options.src
-	suite = Terraformation::Suite.new(options.src)
+	suite = Biosphere::Suite.new(options.src)
 	suite.load_all()
 else
 	STDERR.puts "No --src set"
@@ -94,7 +94,7 @@ if ARGV[0] == "plan" && options.src
 end
 
 if ARGV[0] == "action" && options.src
-	context = Terraformation::ActionContext.new()
+	context = Biosphere::ActionContext.new()
 
 	context.build_directory = options.build
 

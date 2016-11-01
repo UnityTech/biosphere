@@ -1,6 +1,6 @@
 require 'pp'
 
-class Terraformation
+class Biosphere
     class Node
         attr_reader :data
         def initialize(from_string = nil)

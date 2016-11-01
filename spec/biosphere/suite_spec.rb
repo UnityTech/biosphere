@@ -1,16 +1,16 @@
-require 'terraformation'
+require 'biosphere'
 require 'pp'
 require 'json'
 require 'fileutils'
 
-RSpec.describe Terraformation::Suite do
+RSpec.describe Biosphere::Suite do
 
     it "has a constructor" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
     end
 
     it "can go over a list of files in a single directory" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
         s.load_all()
         s.evaluate_resources()
 
@@ -19,7 +19,7 @@ RSpec.describe Terraformation::Suite do
     end
 
     it "require_relative works with suite" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test2")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test2")
         s.load_all()
         s.evaluate_resources()
 
@@ -28,7 +28,7 @@ RSpec.describe Terraformation::Suite do
     end
 
     it "can find action from all files" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
         s.load_all()
 
         expect(s.actions["one"][:name]).to eq("one")
@@ -36,7 +36,7 @@ RSpec.describe Terraformation::Suite do
     end
 
     it "can plan all from all files" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test2")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test2")
         s.load_all()
         s.evaluate_plans()
 
@@ -44,7 +44,7 @@ RSpec.describe Terraformation::Suite do
     end    
 
     it "can write suite into a build directory" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
         s.load_all()
         s.evaluate_resources()
 
@@ -61,19 +61,20 @@ RSpec.describe Terraformation::Suite do
     end
 
     it "can save node from file" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_node_save")
+        if File.exists?("spec/biosphere/suite_node_save/state.node")
+            File.delete("spec/biosphere/suite_node_save/state.node")
+        end
+
+        s = Biosphere::Suite.new("spec/biosphere/suite_node_save")
         s.load_all()
 
-        if File.exists?("spec/terraformation/suite_node_save/state.node")
-            File.delete("spec/terraformation/suite_node_save/state.node")
-        end
         s.save_node("state.node")
 
-        expect(File.exists?("spec/terraformation/suite_node_save/state.node")).to eq(true)
+        expect(File.exists?("spec/biosphere/suite_node_save/state.node")).to eq(true)
     end
 
     it "can load node from file automatically" do
-        s = Terraformation::Suite.new("spec/terraformation/suite_node_load")
+        s = Biosphere::Suite.new("spec/biosphere/suite_node_load")
         expect(s.node[:foo]).to eq("bar")
     end
 
