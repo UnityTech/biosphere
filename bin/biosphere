@@ -100,14 +100,10 @@ if ARGV[0] == "json" && options.src
 	puts "Wrote #{count} files into #{options.build}"
 	suite.save_node()
 
-end
-
-if ARGV[0] == "plan" && options.src
+elsif ARGV[0] == "plan" && options.src
 	suite.evaluate_plans()
 	ap suite.node, :indent=>-4
-end
-
-if ARGV[0] == "action" && options.src
+elsif ARGV[0] == "action" && options.src
 	context = Biosphere::ActionContext.new()
 
 	context.build_directory = options.build
@@ -116,5 +112,8 @@ if ARGV[0] == "action" && options.src
 	suite.call_action(ARGV[1], context)
 
 	suite.save_node()
+else
+	STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
+	exit -1
 end
 
