@@ -162,6 +162,19 @@ RSpec.describe Biosphere::TerraformProxy do
             expect(p.export["resource"]["type"]["name"][:name]).to eq("bar")
             
         end
+
+        it "can do self" do
+            p = Biosphere::TerraformProxy.new("test")
+            p.load_from_block do              
+                resource "type", "name" do
+                    set :self, true
+                end
+            end
+            p.evaluate_resources()
+            
+            expect(p.export["resource"]["type"]["name"][:self]).to eq(true)
+            
+        end        
     end
 
     describe("plan") do

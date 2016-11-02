@@ -47,6 +47,10 @@ class Biosphere
             return true
         end
 
+        def set(symbol, value)
+            @output[symbol] = value
+        end
+
         def method_missing(symbol, *args)
             #puts ">>>>>>>> method missing: #{symbol}, #{args}"
 
