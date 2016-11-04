@@ -108,8 +108,11 @@ elsif ARGV[0] == "action" && options.src
 
 	context.build_directory = options.build
 
-	STDERR.puts "Executing action #{ARGV[1]}"
-	suite.call_action(ARGV[1], context)
+	if suite.call_action(ARGV[1], context)
+		STDERR.puts "Executing action #{ARGV[1]}"
+	else
+		STDERR.puts "Could not find action #{ARGV[1]}"
+	end
 
 	suite.save_node()
 else
