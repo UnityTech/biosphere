@@ -80,7 +80,7 @@ class Biosphere
                     resource: ns_prefix + resource_name + "/#{name}",
                     body: JSON.parse(ret.body)
                 }
-                puts "Created resource #{key}/#{name}"
+                puts "Created resource #{ns_prefix + resource_name}/#{name}"
 
             rescue RestClient::Conflict => e
                 key = ns_prefix + resource_name + "/#{name}"
