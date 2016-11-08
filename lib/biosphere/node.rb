@@ -31,6 +31,10 @@ class Biosphere
         def save()
             return Marshal.dump(self)
         end
+
+        def values
+            return @data.values
+        end
     end
 end
 

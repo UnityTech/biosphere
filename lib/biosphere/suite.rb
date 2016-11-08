@@ -76,11 +76,15 @@ class Biosphere
 		end
 
 		def call_action(name, context)
+			found = false
 			@files.each do |file_name, proxy|
 				if proxy.actions[name]
+					found = true
 					proxy.call_action(name, context)
 				end
 			end
+
+			return found
 		end
 
 		def write_json_to(destination_dir)

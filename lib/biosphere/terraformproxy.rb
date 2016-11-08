@@ -1,4 +1,5 @@
 require 'biosphere/mixing/from_file.rb'
+require 'biosphere/kube.rb'
 require 'json'
 require 'pathname'
 require 'base64'
@@ -8,6 +9,7 @@ class Biosphere
     class ActionContext
         attr_accessor :build_directory
         attr_accessor :caller
+        attr_accessor :src_path
 
         def initialize()
 
@@ -19,8 +21,14 @@ class Biosphere
             if @caller.methods.include?(symbol)
                 return @caller.method(symbol).call(*args)
             end
+
+            super
         end
 
+        def find_file(filename)
+            src_path = Pathname.new(@src_path.last + "/" + File.dirname(filename)).cleanpath.to_s
+            return src_path + "/" + File.basename(filename)
+        end
 
     end
 
@@ -41,6 +49,8 @@ class Biosphere
             @output = {}
             @caller = caller
         end
+
+
 
 
         def respond_to?(symbol, include_private = false)
@@ -91,6 +101,8 @@ class Biosphere
         attr_accessor :plan_proxy
         attr_reader :src_path
 
+        include Kube
+
 
         def initialize(script_name, plan_proxy = nil)
             @script_name = script_name
@@ -118,6 +130,15 @@ class Biosphere
 
         def load_from_block(&block)
             self.instance_eval(&block)
+        end
+
+        def find_file(filename)
+            src_path = Pathname.new(@src_path.last + "/" + File.dirname(filename)).cleanpath.to_s
+            return src_path + "/" + File.basename(filename)
+        end
+
+        def find_dir(dirname)
+            return Pathname.new(@src_path.last).cleanpath.to_s
         end
 
         def load(filename)
@@ -162,7 +183,8 @@ class Biosphere
                 :name => name,
                 :description => description,
                 :block => block,
-                :location => caller[0]
+                :location => caller[0],
+                :src_path => @src_path.clone
             }
         end
 
@@ -188,6 +210,7 @@ class Biosphere
 
         def call_action(name, context)
             context.caller = self
+            context.src_path = @actions[name][:src_path]
 
             context.instance_eval(&@actions[name][:block])
         end
@@ -252,4 +275,5 @@ class Biosphere
             end
         end
     end
+
 end
