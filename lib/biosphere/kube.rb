@@ -185,19 +185,30 @@ class Biosphere
         def kube_apply_resource(client, resource)
             name = resource[:metadata][:name]
             responses = []
+            not_found = false
             begin
-                response = client.post(resource)
-                puts "Created resource #{response[:resource]}"
-                responses << response
-
-            rescue RestClient::Conflict => e
                 response = client.get(resource)
+            rescue RestClient::NotFound => e
+                not_found = true
+            end
+
+            if not_found
+                begin
+                    response = client.post(resource)
+                    puts "Created resource #{response[:resource]}"
+                    responses << response
+                rescue RestClient::UnprocessableEntity => e
+                    pp e
+                    pp JSON.parse(e.response.body)
+                end
+            else
                 puts "Updating resource #{response[:resource]}"
 
                 # Get the current full resource from apiserver
                 update_resource = response[:body]
 
                 # Merge the updates on top of it
+                # TODO: this doesn't remove fields from the update_resource which have been removed from the to-be-updated resource
                 update_resource.merge(resource)
 
                 # Remove fields which apiserver refuses to accept in PUT requests
