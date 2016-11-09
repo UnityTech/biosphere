@@ -24,8 +24,103 @@ end
 
 class Biosphere
     module Kube
+
+        class Client
+            def initialize(hostname, ssl_options)
+                @clients = []
+
+                @clients << ::Kubeclient::Client.new("#{hostname}/api" , "v1", ssl_options: ssl_options)
+                @clients << ::Kubeclient::Client.new("#{hostname}/apis/extensions/" , "v1beta1", ssl_options: ssl_options)
+
+                @clients.each { |c| c.discover }
+            end
+
+            def get_resource_name(resource)
+                resource_name = nil
+                kind = resource[:kind].underscore_case
+                @clients.each do |c|
+                    if c.instance_variable_get("@entities")[kind]
+                        return c.instance_variable_get("@entities")[kind].resource_name
+                    end
+                end
+                return nil
+            end
+
+            def get_client(resource)
+                kind = resource[:kind].underscore_case
+                @clients.each do |c|
+                    if c.instance_variable_get("@entities")[kind]
+                        return c
+                    end
+                end
+                return nil
+            end
+
+            def post(resource)
+                name = resource[:metadata][:name]
+                client = get_client(resource)
+                resource_name = get_resource_name(resource)
+
+                if !client
+                    raise ArgumentError, "Unknown resource #{resource[:kind]} of #{name} for kubernetes. Maybe this is in a new extension api?"
+                end
+
+                ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
+                ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
+                return {
+                    action: :post,
+                    resource: ns_prefix + resource_name + "/#{name}",
+                    body: JSON.parse(ret.body, :symbolize_names => true)
+                }
+            end
+
+            def get(resource)
+                name = resource[:metadata][:name]
+                client = get_client(resource)
+                resource_name = get_resource_name(resource)
+
+                if !client
+                    raise ArgumentError, "Unknown resource #{resource[:kind]} of #{name} for kubernetes. Maybe this is in a new extension api?"
+                end
+
+                ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
+                key = ns_prefix + resource_name + "/#{name}"
+                ret = client.rest_client[key].get(client.instance_variable_get("@headers"))
+                return {
+                    action: :get,
+                    resource: key,
+                    body: JSON.parse(ret.body, :symbolize_names => true)
+                }
+            end
+
+            def put(resource)
+                name = resource[:metadata][:name]
+                client = get_client(resource)
+                resource_name = get_resource_name(resource)
+
+                if !client
+                    raise ArgumentError, "Unknown resource #{resource[:kind]} of #{name} for kubernetes. Maybe this is in a new extension api?"
+                end
+
+                ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
+                key = ns_prefix + resource_name + "/#{name}"
+                ret = client.rest_client[key].put(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
+                return {
+                    action: :put,
+                    resource: key,
+                    body: JSON.parse(ret.body, :symbolize_names => true)
+                }
+
+            end
+
+        end
+
         def kube_test(str)
             return str
+        end
+
+        def kube_get_client(hostname, ssl_options)
+            return Client.new(hostname, ssl_options)
         end
 
         def kube_load_manifest_files(dir)
@@ -89,41 +184,27 @@ class Biosphere
 
         def kube_apply_resource(client, resource)
             name = resource[:metadata][:name]
-            resource_name = client.instance_variable_get("@entities")[resource[:kind].underscore_case].resource_name
-            ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
-
             responses = []
             begin
-                ret = client.rest_client[ns_prefix + resource_name]
-                .post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
-                responses << {
-                    action: :post,
-                    resource: ns_prefix + resource_name + "/#{name}",
-                    body: JSON.parse(ret.body)
-                }
-                puts "Created resource #{ns_prefix + resource_name}/#{name}"
+                response = client.post(resource)
+                puts "Created resource #{response[:resource]}"
+                responses << response
 
             rescue RestClient::Conflict => e
-                key = ns_prefix + resource_name + "/#{name}"
-                rest = client.rest_client[key]
+                response = client.get(resource)
+                puts "Updating resource #{response[:resource]}"
 
-                ret = rest.get(client.instance_variable_get("@headers"))
-                current_data = JSON.parse(ret.body, :symbolize_names => true)
-                puts "Updating resource #{key}"
-                headers = { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers"))
-                update_resource = resource.dup
-                update_resource.delete_field(:apiVersion)
-                current_data.merge(update_resource)
-                pp current_data.to_h
+                # Get the current full resource from apiserver
+                update_resource = response[:body]
+
+                # Merge the updates on top of it
+                update_resource.merge(resource)
+
+                # Remove fields which apiserver refuses to accept in PUT requests
+                update_resource.delete(:apiVersion)
                 
                 begin
-                    ret = rest.put(current_data.to_h.to_json, headers)
-                    responses << {
-                        action: :put,
-                        resource: key,
-                        body: JSON.parse(ret.body)
-                    }
-                    
+                    responses << client.put(update_resource)
                 rescue RestClient::Exception => e
                     puts "Error updating resource: #{e} #{e.class}"
                     pp JSON.parse(e.response)
