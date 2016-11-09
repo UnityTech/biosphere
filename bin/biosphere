@@ -5,6 +5,7 @@ require 'optparse'
 require 'ostruct'
 require 'pp'
 require "awesome_print"
+require 'colorize'
 
 class BiosphereOpts
 
@@ -49,7 +50,9 @@ class BiosphereOpts
 
 end
 
-
+if !STDOUT.isatty
+	String.disable_colorization true
+end
 
 options = BiosphereOpts.parse(ARGV)
 

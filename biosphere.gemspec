@@ -25,4 +25,5 @@ Gem::Specification.new do |s|
   s.add_dependency('awesome_print', '1.7.0')
   s.add_dependency('kubeclient', '2.1.0')
   s.add_dependency('hashdiff', '0.3.0')
+  s.add_dependency('colorize', '0.8.1')
 end

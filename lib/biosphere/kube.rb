@@ -47,10 +47,31 @@ class Biosphere
             resources = []
             puts "Loading file #{file}"
             str = ERB.new(IO.read(file)).result(binding)
-            Psych.load_stream(str) do |document|
-                kind = document["kind"]
-                resource = ::Kubeclient::Resource.new(document)
-                resources << resource
+            begin
+                Psych.load_stream(str) do |document|
+                    kind = document["kind"]
+                    resource = ::Kubeclient::Resource.new(document)
+                    resources << resource
+                end
+            rescue Psych::SyntaxError => e
+                STDERR.puts "\n"
+                STDERR.puts "YAML syntax error while parsing file #{file}. Notice this happens after ERB templating, so line numbers might not match."
+                STDERR.puts "Here are the relevant lines. Error '#{e.problem}' occured at line #{e.line}"
+                STDERR.puts "Notice that yaml is very picky about indentation when you have arrays and maps. Check those first."
+                lines = str.split("\n")
+                start_line = [0, e.line - 3].max
+                end_line = [lines.length - 1, e.line + 3].min
+                lines[start_line..end_line].each_with_index do |line, num|
+                    num += start_line
+                    if num == e.line
+                        STDERR.printf("%04d>  %s\n".red, num, line)
+                    else
+                        STDERR.printf("%04d|  %s\n", num, line)
+                    end
+
+                end
+                STDERR.puts "\n"
+                raise e
             end
             return resources
         end
