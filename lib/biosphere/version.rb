@@ -1,3 +1,3 @@
 class Biosphere
-  Version = "0.0.10"
+  Version = "0.0.11"
 end
