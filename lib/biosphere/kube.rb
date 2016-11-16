@@ -66,6 +66,7 @@ class Biosphere
                 end
 
                 ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
+                ns_prefix = ns_prefix.empty? ? "namespaces/default/" : ns_prefix
                 ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
                 return {
                     action: :post,
