@@ -20,7 +20,7 @@ class BiosphereOpts
 	def self.parse(args)
 
 		options = OpenStruct.new
-		options.build_dir = "build"
+		options.build_dir = "build/"
 		options.src = "./"
 		options.version = ::Biosphere::Version
 
@@ -139,7 +139,7 @@ elsif ARGV[0] == "action" && options.src
 elsif ARGV[0] == "commit" && options.src
 	s3.set_lock()
 	s3.retrieve("#{options.build_dir}terraform.tfstate")
-	s3.retrieve("#{options.build_dir}state.node")
+	s3.retrieve("#{options.src}state.node")
 	tf_plan = %x( terraform plan -state=#{options.build_dir}terraform.tfstate #{options.build_dir} )
 	puts "\n" + tf_plan
 	answer = ""
