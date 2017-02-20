@@ -37,7 +37,7 @@ class S3
                 f.puts(resp.body.read)
             end
         rescue Aws::S3::Errors::NoSuchKey
-            puts "\nCouldn't find existing remote state. Creating a new state file."
+            puts "\nCouldn't find remote file #{filename} from S3."
         rescue
             puts "\nError occurred while fetching the remote state, can't continue."
             puts "Error: #{$!}"
