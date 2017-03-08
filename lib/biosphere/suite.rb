@@ -8,7 +8,7 @@ class Biosphere
 		attr_accessor :files
 		attr_accessor :actions
 
-		def initialize(directory)
+		def initialize(directory, state)
 
 			@files = {}
 			@actions = {}
@@ -16,16 +16,12 @@ class Biosphere
 
 			files = Dir::glob("#{directory}/*.rb")
 
-			@plan_proxy = PlanProxy.new
+			@plan_proxy = PlanProxy.new(state)
 
 			for file in files
 				proxy = Biosphere::TerraformProxy.new(file, @plan_proxy)
 
 				@files[file[directory.length+1..-1]] = proxy
-			end
-
-			if File.exists?(directory + "/state.node")
-				@plan_proxy.node = Marshal.load(File.read(directory + "/state.node"))
 			end
 		end
 
@@ -60,12 +56,6 @@ class Biosphere
 
 			return @files.length
 		end
-
-		def save_node(filename = "state.node")
-			str = Marshal.dump(@plan_proxy.node)
-			File.write(@directory + "/" + filename, str)
-		end
-
 
 		def evaluate_plans()
 			@files.each do |file_name, proxy|

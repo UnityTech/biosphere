@@ -6,11 +6,11 @@ require 'fileutils'
 RSpec.describe Biosphere::Suite do
 
     it "has a constructor" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1", Biosphere::State.new)
     end
 
     it "can go over a list of files in a single directory" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1", Biosphere::State.new)
         s.load_all()
         s.evaluate_resources()
 
@@ -19,7 +19,7 @@ RSpec.describe Biosphere::Suite do
     end
 
     it "require_relative works with suite" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test2")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test2", Biosphere::State.new)
         s.load_all()
         s.evaluate_resources()
 
@@ -28,7 +28,7 @@ RSpec.describe Biosphere::Suite do
     end
 
     it "can find action from all files" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1", Biosphere::State.new)
         s.load_all()
 
         expect(s.actions["one"][:name]).to eq("one")
@@ -36,7 +36,7 @@ RSpec.describe Biosphere::Suite do
     end
 
     it "can plan all from all files" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test2")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test2", Biosphere::State.new)
         s.load_all()
         s.evaluate_plans()
 
@@ -44,7 +44,7 @@ RSpec.describe Biosphere::Suite do
     end    
 
     it "can write suite into a build directory" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_test1")
+        s = Biosphere::Suite.new("spec/biosphere/suite_test1", Biosphere::State.new)
         s.load_all()
         s.evaluate_resources()
 
@@ -57,25 +57,7 @@ RSpec.describe Biosphere::Suite do
 
         if File.directory?("build")
             FileUtils.remove_dir("build")
-        end        
-    end
-
-    it "can save node from file" do
-        if File.exists?("spec/biosphere/suite_node_save/state.node")
-            File.delete("spec/biosphere/suite_node_save/state.node")
         end
-
-        s = Biosphere::Suite.new("spec/biosphere/suite_node_save")
-        s.load_all()
-
-        s.save_node("state.node")
-
-        expect(File.exists?("spec/biosphere/suite_node_save/state.node")).to eq(true)
-    end
-
-    it "can load node from file automatically" do
-        s = Biosphere::Suite.new("spec/biosphere/suite_node_load")
-        expect(s.node[:foo]).to eq("bar")
     end
 
 end

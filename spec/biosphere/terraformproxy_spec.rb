@@ -4,14 +4,14 @@ require 'pp'
 RSpec.describe Biosphere::TerraformProxy do
 
     it "can evaluate file" do
-        p = Biosphere::TerraformProxy.new("spec/biosphere/terraformproxy_test1.rb")
+        p = Biosphere::TerraformProxy.new("spec/biosphere/terraformproxy_test1.rb", Biosphere::State.new)
         p.load_from_file()
         p.evaluate_resources()
         expect(p.export["resource"]["type"]["name"]).to eq({:foo => "one", :bar=> false})
     end
 
     it "can evaluate block" do
-        p = Biosphere::TerraformProxy.new("test")
+        p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
         p.load_from_block do
             resource "type", "name" do
                 foo "one"
@@ -24,7 +24,7 @@ RSpec.describe Biosphere::TerraformProxy do
     end
 
     it "supports node outside resource or plan definition" do
-        p = Biosphere::TerraformProxy.new("test")
+        p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
         p.load_from_block do
             node[:settings] = true
         end
@@ -33,9 +33,23 @@ RSpec.describe Biosphere::TerraformProxy do
 
     end
 
+    it "can handle loading state after init" do
+        state = Biosphere::State.new
+        p = Biosphere::TerraformProxy.new("test", state)
+        state.reset()
+        state.node[:foo] = "bar"
+        p.load_from_block do
+            node[:settings] = true
+        end
+
+        expect(p.node[:foo]).to eq("bar")
+        expect(p.node[:settings]).to eq(true)
+
+    end
+
     describe "resource" do
         it "can use block notation" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 resource "type", "name" do
                     foo "one"
@@ -63,7 +77,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can do ingress into array multiple times" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 resource "type", "name" do
                     foo "one"
@@ -88,7 +102,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can do ingress into array multiple times 2" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 resource "type", "name" do
                     foo "one"
@@ -119,7 +133,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end 
 
         it "can refer to an already set property later in resource definition block" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 resource "type", "name" do
                     name "one"
@@ -133,7 +147,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can handle scoping" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 the_name = "one"
                 resource "type", "name" do
@@ -147,7 +161,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can call function defined outside of the resource block" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 def foo()
                     return "bar"
@@ -164,8 +178,8 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can do self" do
-            p = Biosphere::TerraformProxy.new("test")
-            p.load_from_block do              
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
+            p.load_from_block do
                 resource "type", "name" do
                     set :self, true
                 end
@@ -179,7 +193,7 @@ RSpec.describe Biosphere::TerraformProxy do
 
     describe("plan") do
         it "can execute a plan" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 plan "world domination" do
                     node[:name] = "test"
@@ -194,7 +208,7 @@ RSpec.describe Biosphere::TerraformProxy do
     describe("included templates") do
         it("is possible to include a file with a function and define resources via that function") do
 
-            p = Biosphere::TerraformProxy.new("spec/biosphere/suite_test2/main_file.rb")
+            p = Biosphere::TerraformProxy.new("spec/biosphere/suite_test2/main_file.rb", Biosphere::State.new)
             p.load_from_file()
             p.evaluate_resources()
 
@@ -208,7 +222,7 @@ RSpec.describe Biosphere::TerraformProxy do
 
     describe("actions") do
         it "is possible to define an action" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 action "init", "Description what this does"
             end
@@ -220,7 +234,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can use function defined outside the action" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 def foo()
                     return "bar"
@@ -246,7 +260,7 @@ RSpec.describe Biosphere::TerraformProxy do
 
     describe("expose outputs") do
         it("is possible to expose an output variable") do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 output "foobar", "${aws_instance.master.0.public_ip}"
             end
@@ -258,7 +272,7 @@ RSpec.describe Biosphere::TerraformProxy do
 
     describe("expose variables") do
         it("is possible to define a simple string variable") do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 variable "foobar", "Hello, World!"
             end
@@ -271,7 +285,7 @@ RSpec.describe Biosphere::TerraformProxy do
     describe("load") do
 
         it "can load a file which ends in .rb" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 load "spec/biosphere/suite_test2/lib/template_file.rb"
             end
@@ -280,7 +294,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can load a file which does not ends in .rb" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
             p.load_from_block do
                 load "spec/biosphere/suite_test2/lib/template_file"
             end
@@ -289,7 +303,7 @@ RSpec.describe Biosphere::TerraformProxy do
         end
 
         it "can load a file which defines a function and then use that function" do
-            p = Biosphere::TerraformProxy.new("test")
+            p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
 
             p.load_from_block do
                 puts "Going to load test.rb"

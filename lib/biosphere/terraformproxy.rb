@@ -34,11 +34,14 @@ class Biosphere
 
 
     class PlanProxy
-        attr_accessor :node
-        def initialize()
-            @node = Node.new
+        attr_reader :state
+        def initialize(state)
+            @state = state
         end
 
+        def node
+            return @state.node
+        end
     end
 
     class ResourceProxy
@@ -115,7 +118,7 @@ class Biosphere
                 "output" => {}
             }
             if !plan_proxy
-                plan_proxy = PlanProxy.new
+                plan_proxy = PlanProxy.new(state)
             end
             @plan_proxy = plan_proxy
             @resources = []

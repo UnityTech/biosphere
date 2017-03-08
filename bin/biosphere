@@ -10,17 +10,10 @@ require 'biosphere/s3.rb'
 
 class BiosphereOpts
 
-	def self.normalize_path(path)
-		if path[-1] != '/'
-			path += '/'
-		end
-		return path
-	end
-
 	def self.parse(args)
 
 		options = OpenStruct.new
-		options.build_dir = "build/"
+		options.build_dir = "build"
 		options.src = "./"
 		options.version = ::Biosphere::Version
 
@@ -45,11 +38,16 @@ class BiosphereOpts
 			end
 
 			opts.on("--src PATH", "Directory where the application .rb files are") do |path|
-				options.src = normalize_path(path)
+				options.src = path
 			end
 
 			opts.on("--build-dir PATH", "Directory where to build json files") do |path|
-				options.build_dir = normalize_path(path)
+				options.build_dir = path
+			end
+
+			opts.on_tail("-v", "--version", "Show version") do
+				puts options.version
+				exit
 			end
 
 		end
@@ -77,7 +75,8 @@ if !File.directory?(options.src)
 end
 
 if options.src
-	suite = Biosphere::Suite.new(options.src)
+	state = Biosphere::State.new
+	suite = Biosphere::Suite.new(options.src, state)
 	if options.src == "./"
 		STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
 	end
@@ -92,6 +91,12 @@ if options.src
 		exit 1
 	end
 	s3 = S3.new(suite.node[:settings][:s3_bucket], suite.node[:settings][:cluster_name])
+	s3.retrieve("#{options.build_dir}/terraform.tfstate")
+	s3.retrieve("#{options.build_dir}/state.node")
+
+	# This will update the state which is already passed to the suite.
+	state.load("#{options.build_dir}/state.node")
+	
 end
 
 if options.build_dir
@@ -116,15 +121,13 @@ if ARGV[0] == "build" && options.src
 	end
 
 	puts "Wrote #{count} files into #{options.build_dir}"
-	suite.save_node()
+	state.save()
 
 elsif ARGV[0] == "plan" && options.src
 	suite.evaluate_plans()
 	ap suite.node, :indent=>-4
 
 elsif ARGV[0] == "action" && options.src
-	s3.retrieve("#{options.build_dir}terraform.tfstate")
-	s3.retrieve("#{options.build_dir}state.node")
 	context = Biosphere::ActionContext.new()
 	context.build_directory = options.build_dir
 
@@ -134,12 +137,12 @@ elsif ARGV[0] == "action" && options.src
 		STDERR.puts "Could not find action #{ARGV[1]}"
 	end
 
-	suite.save_node()
+	state.save()
 
 elsif ARGV[0] == "commit" && options.src
 	s3.set_lock()
-	s3.retrieve("#{options.build_dir}terraform.tfstate")
-	tf_plan = %x( terraform plan -state=#{options.build_dir}terraform.tfstate #{options.build_dir} )
+	s3.retrieve("#{options.build_dir}/terraform.tfstate")
+	tf_plan = %x( terraform plan -state=#{options.build_dir}/terraform.tfstate #{options.build_dir} )
 	puts "\n" + tf_plan
 	answer = ""
 	while answer.empty? || (answer != "y" && answer != "n")
@@ -151,10 +154,10 @@ elsif ARGV[0] == "commit" && options.src
 		puts "\nOk, will not proceed with commit"
 	elsif answer == "y"
 		puts "\nApplying the changes (this may take several minutes)"
-		tf_apply = %x( terraform apply -state=#{options.build_dir}terraform.tfstate #{options.build_dir})
+		tf_apply = %x( terraform apply -state=#{options.build_dir}/terraform.tfstate #{options.build_dir})
 		puts "\n" + tf_apply
-		s3.save("#{options.build_dir}terraform.tfstate")
-		s3.save("#{options.src}state.node")
+		s3.save("#{options.build_dir}/terraform.tfstate")
+		s3.save("#{options.build_dir}/state.node")
 	end
 
 	s3.release_lock()

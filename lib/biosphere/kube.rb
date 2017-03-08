@@ -114,7 +114,7 @@ class Biosphere
 
             end
 
-        end
+        end # end of class Client
 
         def kube_test(str)
             return str
@@ -182,6 +182,29 @@ class Biosphere
             end
         end
 
+        #
+        # Applies seleted properties from the current resource (as fetched from apiserver) to the new_version (as read from manifest file)
+        #
+        #
+        def self.kube_merge_resource_for_put!(current, new_version)
+            if current[:metadata]
+                new_version[:metadata][:selfLink] = current[:metadata][:selfLink] if current[:metadata][:selfLink]
+                new_version[:metadata][:uid] = current[:metadata][:uid] if current[:metadata][:uid]
+                new_version[:metadata][:resourceVersion] = current[:metadata][:resourceVersion] if current[:metadata][:resourceVersion]
+            end
+
+            if current[:spec]
+                new_version[:spec] = {} if !new_version[:spec]
+
+                # handle spec.clusterIP
+                if new_version[:spec][:clusterIP] && new_version[:spec][:clusterIP] != current[:spec][:clusterIP]
+                    raise ArgumentError, "Tried to modify spec.clusterIP from #{current[:spec][:clusterIP]} to #{new_version[:spec][:clusterIP]} but the field is immutable"
+                end
+                new_version[:spec][:clusterIP] = current[:spec][:clusterIP] if current[:spec][:clusterIP]
+
+            end
+            return new_version
+        end
 
         def kube_apply_resource(client, resource)
             name = resource[:metadata][:name]
@@ -206,15 +229,10 @@ class Biosphere
                 puts "Updating resource #{response[:resource]}"
 
                 # Get the current full resource from apiserver
-                update_resource = response[:body]
+                current_resource = response[:body]
 
-                # Merge the updates on top of it
-                # TODO: this doesn't remove fields from the update_resource which have been removed from the to-be-updated resource
-                update_resource.merge(resource)
+                update_resource = Kube.kube_merge_resource_for_put!(current_resource, resource)
 
-                # Remove fields which apiserver refuses to accept in PUT requests
-                update_resource.delete(:apiVersion)
-                
                 begin
                     responses << client.put(update_resource)
                 rescue RestClient::Exception => e

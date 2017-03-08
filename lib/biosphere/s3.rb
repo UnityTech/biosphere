@@ -27,7 +27,7 @@ class S3
 
     def retrieve(path_to_file)
         filename = path_to_file.split('/')[-1]
-        puts "\nFetching #{filename} from S3"
+        puts "Fetching #{filename} from S3"
         begin
             resp = @client.get_object({
                 :bucket => @bucket_name,
