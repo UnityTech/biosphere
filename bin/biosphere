@@ -74,6 +74,13 @@ if !File.directory?(options.src)
 	exit -1
 end
 
+if options.build_dir
+	if !File.directory?(options.build_dir)
+		STDERR.puts "Creating build directory #{options.build_dir} because it was missing"
+		Dir.mkdir(options.build_dir)
+	end
+end
+
 if options.src
 	state = Biosphere::State.new
 	suite = Biosphere::Suite.new(options.src, state)
@@ -97,13 +104,6 @@ if options.src
 	# This will update the state which is already passed to the suite.
 	state.load("#{options.build_dir}/state.node")
 	
-end
-
-if options.build_dir
-	if !File.directory?(options.build_dir)
-		STDERR.puts "Creating build directory #{options.build_dir} because it was missing"
-		Dir.mkdir(options.build_dir)
-	end
 end
 
 if ARGV[0] == "build" && options.src
