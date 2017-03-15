@@ -17,7 +17,7 @@ RSpec.describe Biosphere::Node do
 
     it "can get a new nested property" do
         s = Biosphere::Node.new
-        s[:foo][:bar] = "foobar"
+        s.deep_set(:foo, :bar, "foobar")
         expect(s[:foo][:bar]).to eq("foobar")
     end
 
@@ -30,15 +30,20 @@ RSpec.describe Biosphere::Node do
 
     it "can marshall itself into a string" do
         s = Biosphere::Node.new
-        s[:foo][:bar] = "foobar"
-
+        s.deep_set(:foo, :bar, "foobar")
         str = s.save()
-        expect(str).to eq("\x04\bo:\x14Biosphere::Node\x06:\n@data{\x06:\bfooo;\x00\x06;\x06{\x06:\bbarI\"\vfoobar\x06:\x06ET")
+        expect(str).to eq("\x04\bC:\x1FBiosphere::Node::Attribute{\x06:\bfooC;\x00{\x06:\bbarI\"\vfoobar\x06:\x06ET")
     end
 
     it "can load itself from a string" do
-        s = Biosphere::Node.new("\x04\bo:\x14Biosphere::Node\x06:\n@data{\x06:\bfooo;\x00\x06;\x06{\x06:\bbarI\"\vfoobar\x06:\x06ET")
+        s = Biosphere::Node.new("\x04\bC:\x1FBiosphere::Node::Attribute{\x06:\bfooC;\x00{\x06:\bbarI\"\vfoobar\x06:\x06ET")
         expect(s[:foo][:bar]).to eq("foobar")
+    end
+
+    it "will raise exception if trying to load old format" do
+        expect {
+            s = Biosphere::Node.new("\x04\bo:\x14Biosphere::Node\x06:\n@data{\x06:\bfooo;\x00\x06;\x06{\x06:\bbarI\"\vfoobar\x06:\x06ET")       
+        }.to raise_exception RuntimeError
     end
 
 end

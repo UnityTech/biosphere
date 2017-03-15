@@ -19,9 +19,11 @@ class Biosphere
             @node = Node.new
         end
 
-        def load(filename)
-            @filename = filename
-            @node = Marshal.load(File.read(filename))
+        def load(filename=nil)
+            if filename
+                @filename = filename
+            end
+            @node = Marshal.load(File.read(@filename))
         end
 
         def node(name=nil)
@@ -30,6 +32,10 @@ class Biosphere
             else
                 return @node
             end
+        end
+
+        def merge!(settings)
+            @node.merge!(settings)
         end
 
         def save(filename=nil)

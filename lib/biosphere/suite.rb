@@ -3,95 +3,99 @@ require 'ipaddress'
 require 'biosphere/node'
 
 class Biosphere
-	class Suite
+    class Suite
 
-		attr_accessor :files
-		attr_accessor :actions
+        attr_accessor :files
+        attr_accessor :actions
+        attr_reader :deployments
+        
+        def initialize(state)
 
-		def initialize(directory, state)
+            @files = {}
+            @actions = {}
+            @state = state
+            @deployments = {}
 
-			@files = {}
-			@actions = {}
-			@directory = directory
+            @plan_proxy = PlanProxy.new(self, @state)
+        end
 
-			files = Dir::glob("#{directory}/*.rb")
+        def register(deployment)
+            if @deployments[deployment.name]
+                raise RuntimeException.new("Deployment #{deployment.name} already registered")
+            end
+            @deployments[deployment.name] = deployment
+            @state.node.deep_set(:deployments, deployment.name, deployment.node.data)
+            deployment.state = @state
+        end
 
-			@plan_proxy = PlanProxy.new(state)
-
-			for file in files
-				proxy = Biosphere::TerraformProxy.new(file, @plan_proxy)
-
-				@files[file[directory.length+1..-1]] = proxy
-			end
-		end
-
-		def node(name=nil)
-			if name
-				return @plan_proxy.node[name]
-			else
-				return @plan_proxy.node
-			end
-		end
+        def node(name=nil)
+            if name
+                return @plan_proxy.node[name]
+            else
+                return @plan_proxy.node
+            end
+        end
 
 
-		def evaluate_resources()
-			@files.each do |file_name, proxy|
-				proxy.evaluate_resources()
-			end
+        def evaluate_resources()
+            @deployments.each do |name, deployment|
+                deployment.evaluate_resources()
+            end
 
-		end
+        end
 
-		def load_all()
-			@files.each do |file_name, proxy|
-				proxy.load_from_file()
+        def load_all(directory)
+            @directory = directory
+            files = Dir::glob("#{directory}/*.rb")
 
-				proxy.actions.each do |key, value|
+            for file in files
+                proxy = Biosphere::TerraformProxy.new(file, @plan_proxy)
 
-					if @actions[key]
-						raise "Action '#{key}' already defined at #{value[:location]}"
-					end
-					@actions[key] = value
-				end
-			end
+                @files[file[directory.length+1..-1]] = proxy
+            end
+            
+            @files.each do |file_name, proxy|
+                proxy.load_from_file()
 
-			return @files.length
-		end
+                proxy.actions.each do |key, value|
 
-		def evaluate_plans()
-			@files.each do |file_name, proxy|
-				puts "evaluating plans for #{file_name}"
-				
-				proxy.evaluate_plans()
-			end
-		end
+                    if @actions[key]
+                        raise "Action '#{key}' already defined at #{value[:location]}"
+                    end
+                    @actions[key] = value
+                end
+            end
 
-		def call_action(name, context)
-			found = false
-			@files.each do |file_name, proxy|
-				if proxy.actions[name]
-					found = true
-					proxy.call_action(name, context)
-				end
-			end
+            return @files.length
+        end
 
-			return found
-		end
+        def call_action(name, context)
+            found = false
+            @files.each do |file_name, proxy|
+                if proxy.actions[name]
+                    found = true
+                    proxy.call_action(name, context)
+                end
+            end
 
-		def write_json_to(destination_dir)
-			if !File.directory?(destination_dir)
-				Dir.mkdir(destination_dir)
-			end
+            return found
+        end
 
-			@files.each do |file_name, proxy|
-				json_name = file_name[0..-4] + ".json.tf"
-				str = proxy.to_json(true) + "\n"
-				destination_name = destination_dir + "/" + json_name
-				File.write(destination_name, str)
+        def write_json_to(destination_dir)
+            if !File.directory?(destination_dir)
+                Dir.mkdir(destination_dir)
+            end
 
-				yield file_name, destination_name, str, proxy if block_given?
-			end
+            @deployments.each do |name, deployment|
+                json_name = deployment.name + ".json.tf"
+                str = deployment.to_json(true) + "\n"
+                destination_name = destination_dir + "/" + json_name
+                File.write(destination_name, str)
 
-		end
+                yield deployment.name, destination_name, str, deployment if block_given?
+            end
 
-	end
+        end
+
+    end
 end
