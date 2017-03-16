@@ -2,20 +2,67 @@ require 'biosphere'
 require 'pp'
 
 RSpec.describe Biosphere::Deployment do
-    it "can be created" do
-        d = Biosphere::Deployment.new
-        expect(d).not_to eq(nil)
-    end
 
-    it "has a state" do
-        d = Biosphere::Deployment.new("test", {
-            foo: "bar"
-        })
+    describe "constructor" do
+        it "can be created" do
+            d = Biosphere::Deployment.new
+            expect(d).not_to eq(nil)
+        end
 
-        puts "MMMMMMMM"
-        pp d
-        expect(d.node).not_to eq(nil)
-        expect(d.node[:foo]).to eq("bar")
+        it "will call setup in constructor" do
+
+            class CustomError < RuntimeError
+            end
+
+            class MyDeployment1 < Biosphere::Deployment
+
+                def setup(settings)
+                    raise CustomError.new("called")
+                end
+            end
+
+            expect {
+                d = MyDeployment1.new
+            }.to raise_exception CustomError
+        end
+
+        it "will call setup with settings" do
+
+            class MyDeployment2 < Biosphere::Deployment
+                attr_accessor :test
+                def setup(settings)
+                    @test = settings
+                end
+            end
+
+            d = MyDeployment2.new("", {value: "test"})
+            expect(d.test[:value]).to eq("test")
+        end
+
+
+        it "will call setup with settings Hash when a Settings object was passed to constructor" do
+
+            class MyDeployment3 < Biosphere::Deployment
+                attr_accessor :test
+                def setup(settings)
+                    @test = settings
+                end
+            end
+
+            d = MyDeployment3.new("", Biosphere::Settings.new({value: "test2"}))
+            expect(d.test[:value]).to eq("test2")
+        end        
+
+        it "has a state" do
+            d = Biosphere::Deployment.new("test", {
+                foo: "bar"
+            })
+
+            puts "MMMMMMMM"
+            pp d
+            expect(d.node).not_to eq(nil)
+            expect(d.node[:foo]).to eq("bar")
+        end
     end
 
     describe "features" do

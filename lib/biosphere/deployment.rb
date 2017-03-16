@@ -19,7 +19,11 @@ class Biosphere
 
             settings = {}
             if args[0].kind_of?(Hash)
+                puts "settings is an hash"
                 settings = args.shift
+            elsif args[0].kind_of?(::Biosphere::Settings)
+                puts "settings is a Settings object"
+                settings = (args.shift).settings
             end
 
             if @parent

@@ -22,6 +22,19 @@ RSpec.describe Biosphere::Settings do
         expect(TestSettings.settings[:name]).to eq("foo")
     end
 
+    it "can be created multiple times into an instance" do
+
+        a = Biosphere::Settings.new({foo: "1"})
+        b = Biosphere::Settings.new({foo: "2"})
+        c = Biosphere::Settings.new({foo: "3", bar: "bar"})
+
+        expect(Biosphere::Settings.settings_hash).to eq({})
+        expect(a.settings[:foo]).to eq("1")
+        expect(b.settings[:foo]).to eq("2")
+        expect(c.settings[:foo]).to eq("3")
+        expect(c.settings[:bar]).to eq("bar")
+    end
+
     it "can be nested with classes" do
         class SuperSettings < Biosphere::Settings
             settings({

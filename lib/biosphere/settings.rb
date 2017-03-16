@@ -42,7 +42,7 @@ class Biosphere
         attr_accessor :settings
 
         def initialize(settings = {})
-            @settings = self.class.settings_hash
+            @settings = self.class.settings_hash.dup
             if settings
                 @settings.deep_merge!(settings)
             end
