@@ -5,13 +5,13 @@ class Biosphere
 
     class Deployment
 
-        attr_reader :node, :export, :name, :_settings
-        attr_accessor :state
+        attr_reader :export, :name, :_settings
+        attr_accessor :state, :node
         def initialize(*args)
 
             @parent = nil
             @name = "unnamed"
-            if args[0].kind_of?(::Biosphere::Deployment)
+            if args[0].kind_of?(::Biosphere::Deployment) || args[0].kind_of?(::Biosphere::Suite)
                 @parent = args.shift
             elsif args[0].kind_of?(String)
                 @name = args.shift
@@ -27,27 +27,37 @@ class Biosphere
                 settings = @_settings.settings
             end
 
-            if @parent
+            @export = {
+                "provider" => {},
+                "resource" => {},
+                "variable" => {},
+                "output" => {}
+            }
+
+            if @parent.is_a?(::Biosphere::Suite)
+                if settings[:deployment_name]
+                    @name = settings[:deployment_name]
+                else
+                    puts "\nYou need to specify :deployment_name in the Deployment settings. For example:"
+                    puts "cluster = AdsDeliveryCluster.new(suite, MyDeliveryTestSettings.new({deployment_name: \"my-delivery-test-cluster\"})\n\n"
+                    raise RuntimeError.new "No :deployment_name specified in Deployment settings"
+                end
+                
+                @parent.register(self)
+            elsif @parent
                 @node = @parent.node
                 @state = @parent.state
                 @export = @parent.export
                 @parent.register(self)
+                
             else
                 @node = Node.new
-
-                @export = {
-                    "provider" => {},
-                    "resource" => {},
-                    "variable" => {},
-                    "output" => {}
-                }
             end
 
             @delayed = []
             @resources = []
             @actions = {}
             @deployments = []
-            
 
             self.setup(settings)
 
@@ -140,6 +150,7 @@ class Biosphere
 
                 @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
             end
+
         end
 
         def to_json(pretty=false)

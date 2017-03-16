@@ -12,4 +12,4 @@ end
 
 action "two", "desc"
 
-register(TestDeployment2.new("test2"))
+TestDeployment2.new(suite, {deployment_name: "test2"})

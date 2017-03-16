@@ -8,13 +8,14 @@ class S3
     end
 
     def save(path_to_file)
-        puts "\nSaving #{path_to_file} to S3"
         filename = path_to_file.split('/')[-1]
+        key = "#{@main_key}/#{filename}"
+        puts "Saving #{path_to_file} to S3 #{key}"
         begin
             File.open(path_to_file, 'rb') do |file|
                 @client.put_object({
                     :bucket => @bucket_name,
-                    :key => "#{@main_key}/#{filename}",
+                    :key => key,
                     :body => file
                 })
             end
@@ -27,17 +28,18 @@ class S3
 
     def retrieve(path_to_file)
         filename = path_to_file.split('/')[-1]
-        puts "Fetching #{filename} from S3"
+        key = "#{@main_key}/#{filename}"
+        puts "Fetching #{filename} from S3 from #{key}"
         begin
             resp = @client.get_object({
                 :bucket => @bucket_name,
-                :key => "#{@main_key}/#{filename}"
+                :key => key
             })
             File.open(path_to_file, 'w') do |f|
                 f.puts(resp.body.read)
             end
         rescue Aws::S3::Errors::NoSuchKey
-            puts "\nCouldn't find remote file #{filename} from S3."
+            puts "Couldn't find remote file #{filename} from S3 at #{key}"
         rescue
             puts "\nError occurred while fetching the remote state, can't continue."
             puts "Error: #{$!}"

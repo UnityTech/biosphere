@@ -10,12 +10,10 @@ class TestDeployment < ::Biosphere::Deployment
         helper = DeploymentHelper.new(self)
         helper.my_template("Garo")
 
-        register(helper)
-
         resource "type", "name3" do
             set :foo, "test3"
         end
     end
 end
 
-register(TestDeployment.new("TestDeployment"))
+TestDeployment.new(suite, {deployment_name: "TestDeployment"})

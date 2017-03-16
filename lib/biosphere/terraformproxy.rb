@@ -188,6 +188,10 @@ class Biosphere
         def state
             return @suite.state
         end
+
+        def suite
+            return @suite
+        end
     end
 
 end

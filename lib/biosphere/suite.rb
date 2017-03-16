@@ -24,7 +24,12 @@ class Biosphere
                 raise RuntimeException.new("Deployment #{deployment.name} already registered")
             end
             @deployments[deployment.name] = deployment
-            @state.node.deep_set(:deployments, deployment.name, deployment.node.data)
+            if !@state.node[:deployments]
+                @state.node[:deployments] = Node::Attribute.new
+            end
+            @state.node[:deployments][deployment.name] = Node::Attribute.new
+            deployment.node = Node.new(@state.node[:deployments][deployment.name])
+            #@state.node.deep_set(:deployments, deployment.name, deployment.node.data)
             deployment.state = @state
 
             if deployment._settings[:biosphere]

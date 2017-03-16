@@ -7,6 +7,7 @@ class Biosphere
 
         class Attribute < Hash
             def deep_set(*args)
+                #puts "deep_set: #{args}"
                 raise ArgumentError, "must pass at least one key, and a value" if args.length < 2
                 value = args.pop
                 args = args.first if args.length == 1 && args.first.kind_of?(Array)
@@ -28,13 +29,15 @@ class Biosphere
         end
 
         attr_reader :data
-        def initialize(from_string = nil)
-            if from_string
-                blob = Marshal.load(from_string)
+        def initialize(from = nil)
+            if from && from.is_a?(String)
+                blob = Marshal.load(from)
                 if blob.class == Biosphere::Node
                     raise "Tried to load old state format. Unfortunately we are not backwards compatible"
                 end
                 @data = blob
+            elsif from
+                @data = from
             else
                 @data = Attribute.new
             end
@@ -42,6 +45,10 @@ class Biosphere
 
         def data
             return @data
+        end
+
+        def data=(s)
+            @data = s
         end
 
         def include?(symbol)

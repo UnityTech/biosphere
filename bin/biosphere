@@ -85,13 +85,6 @@ if options.src
     state = Biosphere::State.new
     suite = Biosphere::Suite.new(state)
 
-    # This will update the state which is already passed to the suite.
-    state.filename = "#{options.build_dir}/state.node"
-     if File.exists?(state.filename)
-        puts "Loading state from #{state.filename}"
-        state.load()
-    end
-
     if options.src == "./"
         STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
     end
@@ -100,16 +93,22 @@ if options.src
         STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
         exit -1
     end
-    
+
     if suite.biosphere_settings[:s3_bucket].nil? || suite.biosphere_settings[:s3_bucket].empty? ||
         suite.biosphere_settings[:state_name].nil? || suite.biosphere_settings[:state_name].empty?
         puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
         exit 1
     end
-    s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:cluster_name])
+    s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:state_name])
     s3.retrieve("#{options.build_dir}/state.node")
 
-    
+    # This will update the state which is already passed to the suite.
+    state.filename = "#{options.build_dir}/state.node"
+     if File.exists?(state.filename)
+        puts "Loading state from #{state.filename}"
+        state.load()
+    end
+
 end
 
 if ARGV[0] == "build" && options.src
@@ -128,6 +127,7 @@ if ARGV[0] == "build" && options.src
 
     puts "Wrote #{count} files into #{options.build_dir}"
     state.save()
+    s3.save("#{options.build_dir}/state.node")
 
 elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
@@ -145,8 +145,8 @@ elsif ARGV[0] == "action" && options.src
     else
         STDERR.puts "Could not find action #{ARGV[1]}"
     end
-
     state.save()
+    s3.save("#{options.build_dir}/state.node")
 
 elsif ARGV[0] == "deployment" && options.src
 

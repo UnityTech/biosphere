@@ -8,6 +8,7 @@ global_settings = {
 }
 
 a = SubDeployment.new("subdeployment", global_settings.deep_merge({
+    deployment_name: "subdeployment",
     my: "sub-deployment",
     region: "us-east-1"
 }))

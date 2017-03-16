@@ -3,6 +3,7 @@ require 'pp'
 
 RSpec.describe Biosphere::TerraformProxy do
 
+    default_settings = { deployment_name: "unnamed" }
 
     describe "defining resources using Deployments" do
         it "can define a resource in the constructor" do
@@ -19,7 +20,7 @@ RSpec.describe Biosphere::TerraformProxy do
                         end
                     end
                 end
-                a = TestDeployment.new
+                a = TestDeployment.new(default_settings)
 
                 a.evaluate_resources()
                 res[:a] = a

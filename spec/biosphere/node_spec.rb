@@ -15,10 +15,31 @@ RSpec.describe Biosphere::Node do
         expect(s[:foo]).to eq("bar")
     end
 
-    it "can get a new nested property" do
-        s = Biosphere::Node.new
-        s.deep_set(:foo, :bar, "foobar")
-        expect(s[:foo][:bar]).to eq("foobar")
+    describe "deep_set" do
+        it "can get a new nested property" do
+            s = Biosphere::Node.new
+            s.deep_set(:foo, :bar, "foobar")
+            expect(s[:foo][:bar]).to eq("foobar")
+        end
+
+        it "can get a new nested without destroying old one" do
+=begin
+            s = Biosphere::Node.new
+            puts "1111111111111"
+            s.deep_set(:foo, :bar, {})
+            expect(s[:foo][:bar]).to eq({})
+
+            s[:foo][:bar]["1"] = 1
+            expect(s[:foo][:bar]["1"]).to eq(1)
+
+            puts "11111111111112"
+
+            s.deep_set(:foo, :bar, "2", 2)
+            expect(s[:foo][:bar]["1"]).to eq(1)
+            expect(s[:foo][:bar]["2"]).to eq(2)
+=end
+        end
+
     end
 
     it "can evaluate to false when checking if a missing key exists" do
