@@ -100,15 +100,14 @@ if options.src
         STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
         exit -1
     end
-
-    if suite.node[:global_settings][:s3_bucket].nil? || suite.node[:global_settings][:s3_bucket].empty? || suite.node[:global_settings][:state_name].nil? || suite.node[:global_settings][:state_name].empty?
+    
+    if suite.biosphere_settings[:s3_bucket].nil? || suite.biosphere_settings[:s3_bucket].empty? ||
+        suite.biosphere_settings[:state_name].nil? || suite.biosphere_settings[:state_name].empty?
         puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
         exit 1
     end
-    s3 = S3.new(suite.node[:global_settings][:s3_bucket], suite.node[:global_settings][:cluster_name])
-    s3.retrieve("#{options.build_dir}/terraform.tfstate")
+    s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:cluster_name])
     s3.retrieve("#{options.build_dir}/state.node")
-
 
     
 end
@@ -134,6 +133,9 @@ elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
     ap suite.node, :indent=>-4
 
+elsif ARGV[0] == "state" && options.src
+    ap suite.state.node, :indent=>-4    
+
 elsif ARGV[0] == "action" && options.src
     context = Biosphere::ActionContext.new()
     context.build_directory = options.build_dir
@@ -146,10 +148,27 @@ elsif ARGV[0] == "action" && options.src
 
     state.save()
 
+elsif ARGV[0] == "deployment" && options.src
+
+    suite.deployments.each do |name, deployment|
+        puts "Deployment: #{name}"
+    end
+
 elsif ARGV[0] == "commit" && options.src
+
+    if !ARGV[1]
+        puts "Please specify deployment name as the second parameter."
+        puts "Available deployments:"
+        suite.deployments.each do |name, deployment|
+            puts "\t#{name}"
+        end
+        exit -1
+    end
+    deployment = ARGV[1]
+
     s3.set_lock()
-    s3.retrieve("#{options.build_dir}/terraform.tfstate")
-    tf_plan = %x( terraform plan -state=#{options.build_dir}/terraform.tfstate #{options.build_dir} )
+    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
+    tf_plan = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir} )
     puts "\n" + tf_plan
     answer = ""
     while answer.empty? || (answer != "y" && answer != "n")
@@ -161,9 +180,41 @@ elsif ARGV[0] == "commit" && options.src
         puts "\nOk, will not proceed with commit"
     elsif answer == "y"
         puts "\nApplying the changes (this may take several minutes)"
-        tf_apply = %x( terraform apply -state=#{options.build_dir}/terraform.tfstate #{options.build_dir})
+        tf_apply = %x( terraform apply -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
         puts "\n" + tf_apply
-        s3.save("#{options.build_dir}/terraform.tfstate")
+        s3.save("#{options.build_dir}/#{deployment}.tfstate")
+        s3.save("#{options.build_dir}/state.node")
+    end
+
+    s3.release_lock()
+
+elsif ARGV[0] == "destroy" && options.src
+
+    if !ARGV[1]
+        puts "Please specify deployment name as the second parameter."
+        puts "Available deployments:"
+        suite.deployments.each do |name, deployment|
+            puts "\t#{name}"
+        end
+        exit -1
+    end
+    deployment = ARGV[1]
+
+    s3.set_lock()
+    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
+    answer = ""
+    while answer.empty? || (answer != "y" && answer != "n")
+        print "\nYou are about to destroy deployment #{deployment}? (Answering yes will nuke it from the orbit) y/n: "
+        answer = STDIN.gets.chomp
+    end
+
+    if answer == "n"
+        puts "\nAborted!"
+    elsif answer == "y"
+        puts "\nDestroying deployment #{deployment} (this may take several minutes)"
+        tf_apply = %x( terraform destroy -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
+        puts "\n" + tf_apply
+        s3.save("#{options.build_dir}/#{deployment}.tfstate")
         s3.save("#{options.build_dir}/state.node")
     end
 

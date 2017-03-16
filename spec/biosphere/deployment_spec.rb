@@ -53,25 +53,33 @@ RSpec.describe Biosphere::Deployment do
             expect(d.test[:value]).to eq("test2")
         end        
 
-        it "has a state" do
-            d = Biosphere::Deployment.new("test", {
-                foo: "bar"
-            })
-
-            puts "MMMMMMMM"
-            pp d
-            expect(d.node).not_to eq(nil)
-            expect(d.node[:foo]).to eq("bar")
-        end
     end
 
     describe "features" do
+        it "can have a delayed callback modifying state" do
+
+            class MyDeployment4 < Biosphere::Deployment
+                def setup(settings)
+                    delayed do
+                        node[:foo] = "bar"
+                    end
+                end
+            end
+
+            d = MyDeployment4.new
+            d.evaluate_resources
+
+            expect(d.node).not_to eq(nil)
+            expect(d.node[:foo]).to eq("bar")
+
+        end
+
         it "can define variable" do
 
             class TestDeployment < Biosphere::Deployment
                 def setup(settings)
                     variable "aws_access_key", ""
-                    variable "aws_secret_key", node[:foo]
+                    variable "aws_secret_key", settings[:foo]
                 end
             end
 
@@ -194,66 +202,6 @@ RSpec.describe Biosphere::Deployment do
             expect(d.node[:foobar]).to eq("foobar")
         end
 
-    end
-
-    describe "polymorphism" do
-
-        it "can be used as ancestor on two levels" do
-
-            class TestDeployment < Biosphere::Deployment
-                def initialize(settings={})
-                    super(settings)
-                    @node.merge!({
-                        deep: {
-                            value: "hello"
-                        },
-                        name: "TestDeployment"
-                    })
-                end
-            end
-
-            class ATestDeployment < TestDeployment
-                def initialize(settings={})
-                    super(settings)
-                    @node.merge!({
-                        name: "ATestDeployment"
-                    })
-                end
-                
-            end
-
-            class BTestDeployment < TestDeployment
-
-                attr :cluster_name, "default"
-
-                def initialize(settings={})
-                    super(settings)
-                    @node.merge!({
-                        name: "BTestDeployment"
-                    })
-                end
-            end
-
-            a = ATestDeployment.new({
-                foo: "bar",
-                value: "A"
-            })
-
-            b = BTestDeployment.new({
-                foo: "bar",
-                value: "B"
-            })
-            
-            expect(a.node[:name]).to eq("ATestDeployment")
-            expect(a.node[:value]).to eq("A")
-            expect(a.node[:foo]).to eq("bar")
-            expect(a.node[:deep][:value]).to eq("hello")
-
-            expect(b.node[:name]).to eq("BTestDeployment")
-            expect(b.node[:value]).to eq("B")
-            expect(b.node[:foo]).to eq("bar")
-            expect(b.node[:deep][:value]).to eq("hello")
-        end
     end
 
     describe("expose outputs") do

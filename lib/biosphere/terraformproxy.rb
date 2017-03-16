@@ -15,6 +15,10 @@ class Biosphere
 
         end
 
+        def state
+            return @caller.state.node
+        end
+
         def method_missing(symbol, *args)
             #puts ">>>>>>>> method missing: #{symbol}, #{args}"
 
@@ -181,6 +185,9 @@ class Biosphere
             "${#{type}.#{name}.#{values.join(".")}}"
         end
 
+        def state
+            return @suite.state
+        end
     end
 
 end

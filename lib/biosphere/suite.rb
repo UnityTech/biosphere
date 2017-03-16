@@ -7,7 +7,7 @@ class Biosphere
 
         attr_accessor :files
         attr_accessor :actions
-        attr_reader :deployments
+        attr_reader :deployments, :biosphere_settings, :state
         
         def initialize(state)
 
@@ -15,6 +15,8 @@ class Biosphere
             @actions = {}
             @state = state
             @deployments = {}
+            @biosphere_settings = {}
+            @biosphere_path = ""
         end
 
         def register(deployment)
@@ -24,6 +26,11 @@ class Biosphere
             @deployments[deployment.name] = deployment
             @state.node.deep_set(:deployments, deployment.name, deployment.node.data)
             deployment.state = @state
+
+            if deployment._settings[:biosphere]
+                @biosphere_settings.deep_merge!(deployment._settings[:biosphere])
+            end
+            
         end
 
         def evaluate_resources()

@@ -38,19 +38,29 @@ RSpec.describe Biosphere::Settings do
     it "can be nested with classes" do
         class SuperSettings < Biosphere::Settings
             settings({
-                name: "super"
+                name: "super",
+                biosphere: {
+                    s3_bucket: "test"
+                }
             })
         end
 
         class NestedSettings < SuperSettings
             settings({
-                name: "overwritten"
+                name: "overwritten",
+                biosphere: {
+                    state_name: "test-state"
+                }
             })
         end
 
         expect(Biosphere::Settings.settings).to eq({})
+
         expect(SuperSettings.settings[:name]).to eq("super")
+        expect(SuperSettings.settings[:biosphere]).to eq({s3_bucket: "test"})
+
         expect(NestedSettings.settings[:name]).to eq("overwritten")
+        expect(NestedSettings.settings[:biosphere]).to eq({s3_bucket: "test", state_name: "test-state"})
 
         a = NestedSettings.new
         expect(a.settings[:name]).to eq("overwritten")
@@ -101,6 +111,25 @@ RSpec.describe Biosphere::Settings do
         c = NestedSettings.new({foo: "bar", name: "instantiated"})
         expect(c.settings[:name]).to eq("instantiated")
         expect(c.settings[:foo]).to eq("bar")
+
+    end
+
+    it "can build a nested path name" do
+        class SuperSettings < Biosphere::Settings
+            settings({
+                name: "super"
+            })
+        end
+
+        class NestedSettings < SuperSettings
+            settings({
+                name: "overwritten"
+            })
+        end
+
+        a = NestedSettings.new
+        expect(a.path).to eq("SuperSettings/NestedSettings")
+
 
     end
 end

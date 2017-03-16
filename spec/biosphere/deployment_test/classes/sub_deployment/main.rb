@@ -15,6 +15,10 @@ class SubDeployment < TestDeployment
             access_key: "${var.aws_access_key}",
             secret_key: "${var.aws_secret_key}",
             region: settings[:region]
+
+        delayed do
+            node[:my] = settings[:my]
+        end
     end
 end
 

@@ -5,7 +5,7 @@ class Biosphere
 
     class Deployment
 
-        attr_reader :node, :export, :name
+        attr_reader :node, :export, :name, :_settings
         attr_accessor :state
         def initialize(*args)
 
@@ -18,12 +18,13 @@ class Biosphere
             end
 
             settings = {}
+            @_settings = {}
             if args[0].kind_of?(Hash)
-                puts "settings is an hash"
                 settings = args.shift
+                @_settings = settings
             elsif args[0].kind_of?(::Biosphere::Settings)
-                puts "settings is a Settings object"
-                settings = (args.shift).settings
+                @_settings = args.shift
+                settings = @_settings.settings
             end
 
             if @parent
@@ -33,7 +34,6 @@ class Biosphere
                 @parent.register(self)
             else
                 @node = Node.new
-                @node.merge!(settings)
 
                 @export = {
                     "provider" => {},
@@ -43,9 +43,11 @@ class Biosphere
                 }
             end
 
+            @delayed = []
             @resources = []
             @actions = {}
             @deployments = []
+            
 
             self.setup(settings)
 
@@ -82,6 +84,13 @@ class Biosphere
             @export["provider"][name.to_s] = spec
         end
 
+        def delayed(&block)
+            delayed_call = {
+                :block => block
+            }
+            @delayed << delayed_call
+        end
+
         def resource(type, name, &block)
             @export["resource"][type.to_s] ||= {}
             if @export["resource"][type.to_s][name.to_s]
@@ -116,6 +125,12 @@ class Biosphere
             # Call first sub-deployments
             @deployments.each do |deployment|
                 deployment.evaluate_resources()
+            end
+
+            # Then all delayed calls
+            @delayed.each do |delayed_call|
+                proxy = ResourceProxy.new(self)
+                proxy.instance_eval(&delayed_call[:block])
             end
 
             # And finish with our own resources

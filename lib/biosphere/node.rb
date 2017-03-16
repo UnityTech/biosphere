@@ -40,6 +40,10 @@ class Biosphere
             end
         end
 
+        def data
+            return @data
+        end
+
         def include?(symbol)
             @data.include?(symbol)
         end
@@ -57,7 +61,7 @@ class Biosphere
         end
 
         def merge!(obj)
-            @data.merge!(obj)
+            @data.deep_merge!(obj)
         end
 
         def save()

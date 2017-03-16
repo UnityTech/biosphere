@@ -57,7 +57,7 @@ RSpec.describe Biosphere::Suite do
         it "can load a deployment from files" do
             s = Biosphere::Suite.new(Biosphere::State.new)
             s.load_all("spec/biosphere/deployment_test/")
-
+            s.evaluate_resources
             deployment = s.deployments["subdeployment"]
             expect(deployment.node[:my]).to eq("sub-deployment")
         end
