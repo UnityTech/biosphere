@@ -1,9 +1,19 @@
 
 load 'lib/template_file.rb'
 
-my_template("Garo")
+#require './lib/template_file.rb'
 
-resource "type", "name3" do
-	foo "test3"
+class TestDeployment < ::Biosphere::Deployment
+
+    def setup(settings)
+        puts "TestDeployment called *******"
+        helper = DeploymentHelper.new(self)
+        helper.my_template("Garo")
+
+        resource "type", "name3" do
+            set :foo, "test3"
+        end
+    end
 end
 
+TestDeployment.new(suite, {deployment_name: "TestDeployment"})

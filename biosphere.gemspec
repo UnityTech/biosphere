@@ -27,4 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency('hashdiff', '0.3.0')
   s.add_dependency('colorize', '0.8.1')
   s.add_dependency('aws-sdk', '~> 2')
+  s.add_dependency('deep_merge', '1.1.1')
+  s.add_dependency('deep_dup', '0.0.3')
 end

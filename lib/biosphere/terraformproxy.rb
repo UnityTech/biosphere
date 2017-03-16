@@ -15,6 +15,10 @@ class Biosphere
 
         end
 
+        def state
+            return @caller.state.node
+        end
+
         def method_missing(symbol, *args)
             #puts ">>>>>>>> method missing: #{symbol}, #{args}"
 
@@ -32,18 +36,6 @@ class Biosphere
 
     end
 
-
-    class PlanProxy
-        attr_reader :state
-        def initialize(state)
-            @state = state
-        end
-
-        def node
-            return @state.node
-        end
-    end
-
     class ResourceProxy
         attr_reader :output
         attr_reader :caller
@@ -53,45 +45,51 @@ class Biosphere
             @caller = caller
         end
 
-
-
-
         def respond_to?(symbol, include_private = false)
             return true
         end
 
         def set(symbol, value)
-            @output[symbol] = value
-        end
-
-        def method_missing(symbol, *args)
-            #puts ">>>>>>>> method missing: #{symbol}, #{args}"
-
-            if @caller.methods.include?(symbol)
-                return @caller.method(symbol).call(*args)
-            end
-
-            # Support getter here
-            if args.length == 0
-                return @output[symbol]
-            end
 
             # Support setter here
             if [:ingress, :egress, :route].include?(symbol)
                 @output[symbol] ||= []
-                if args[0].kind_of?(Array)
-                    @output[symbol] += args[0]
+                if value.kind_of?(Array)
+                    @output[symbol] += value
                 else
-                    @output[symbol] << args[0]
+                    @output[symbol] << value
                 end
             else
-                @output[symbol] = args[0]
+                @output[symbol] = value
             end
 
-            # We need to first gzip and then base64-encode the user_data string to work around the 16kb size limitation in AWS
             if symbol === :user_data
-              @output[symbol] = Base64.strict_encode64(Zlib::Deflate.new(nil, 31).deflate(args[0], Zlib::FINISH))
+              @output[symbol] = Base64.strict_encode64(Zlib::Deflate.new(nil, 31).deflate(value, Zlib::FINISH))
             end
+        end
+
+        def get(symbol)
+            return @output[symbol]
+        end
+
+        def node
+            return @caller.node
+        end
+
+        def state
+            return @caller.state.node
+        end
+
+        def id_of(type,name)
+            "${#{type}.#{name}.id}"
+        end
+
+        def output_of(type, name, *values)
+            "${#{type}.#{name}.#{values.join(".")}}"
+        end
+
+        def method_missing(symbol, *args)
+            return @caller.method(symbol).call(*args)
         end
     end
 
@@ -100,14 +98,12 @@ class Biosphere
         attr_accessor :export
         attr_accessor :resources
         attr_accessor :actions
-        attr_accessor :plans
-        attr_accessor :plan_proxy
         attr_reader :src_path
 
         include Kube
 
 
-        def initialize(script_name, plan_proxy = nil)
+        def initialize(script_name, suite)
             @script_name = script_name
             @src_path = [File.dirname(script_name)]
 
@@ -117,14 +113,14 @@ class Biosphere
                 "variable" => {},
                 "output" => {}
             }
-            if !plan_proxy
-                plan_proxy = PlanProxy.new(state)
-            end
-            @plan_proxy = plan_proxy
-            @resources = []
+            @suite = suite
             @actions = {}
-            @plans = []
+            @deployments = []
 
+        end
+
+        def register(deployment)
+            @suite.register(deployment)
         end
 
         def load_from_file()
@@ -162,24 +158,7 @@ class Biosphere
             @src_path.pop
         end
 
-
         include Biosphere::Mixing::FromFile
-
-        def provider(name, spec={})
-            @export["provider"][name.to_s] = spec
-        end
-
-        def variable(name, value)
-            @export["variable"][name] = {
-                "default" => value
-            }
-        end
-
-        def output(name, value)
-            @export["output"][name] = {
-                "value" => value
-            }
-        end
 
         def action(name, description, &block)
             @actions[name] = {
@@ -191,65 +170,11 @@ class Biosphere
             }
         end
 
-        def plan(name, &block)
-            plan = {
-                :name => name,
-                :block => block,
-                :location => caller[0]
-            }
-            @plans << plan
-        end
-
-        def node
-            return @plan_proxy.node
-        end
-
-        def evaluate_plans()
-            @plans.each do |resource|
-                @plan_proxy.instance_eval(&resource[:block])
-            end
-
-        end
-
         def call_action(name, context)
             context.caller = self
             context.src_path = @actions[name][:src_path]
 
             context.instance_eval(&@actions[name][:block])
-        end
-
-        def resource(type, name, &block)
-            @export["resource"][type.to_s] ||= {}
-            if @export["resource"][type.to_s][name.to_s]
-                throw "Tried to create a resource of type #{type} called '#{name}' when one already exists"
-            end
-
-            spec = {}
-            resource = {
-                :name => name,
-                :type => type,
-                :location => caller[0] + "a"
-            }
-
-            if block_given?
-                resource[:block] = block
-            else
-                STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")
-            end
-
-
-
-            @resources << resource
-
-        end
-
-        def evaluate_resources()
-            @resources.each do |resource|
-                proxy = ResourceProxy.new(self)
-                proxy.instance_eval(&resource[:block])
-
-                @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
-            end
         end
 
         def id_of(type,name)
@@ -260,22 +185,12 @@ class Biosphere
             "${#{type}.#{name}.#{values.join(".")}}"
         end
 
-        def add_resource_alias(type)
-            define_singleton_method type.to_sym do |name, spec={}|
-              resource(type, name, spec)
-            end
+        def state
+            return @suite.state
         end
 
-        def use_resource_shortcuts!
-            require_relative 'resource_shortcuts'
-        end
-
-        def to_json(pretty=false)
-            if pretty
-                return JSON.pretty_generate(@export)
-            else
-                return JSON.generate(@export)
-            end
+        def suite
+            return @suite
         end
     end
 

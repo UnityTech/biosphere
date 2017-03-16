@@ -10,166 +10,224 @@ require 'biosphere/s3.rb'
 
 class BiosphereOpts
 
-	def self.parse(args)
+    def self.parse(args)
 
-		options = OpenStruct.new
-		options.build_dir = "build"
-		options.src = "./"
-		options.version = ::Biosphere::Version
+        options = OpenStruct.new
+        options.build_dir = "build"
+        options.src = "./"
+        options.version = ::Biosphere::Version
 
-		opt_parser = OptionParser.new do |opts|
+        opt_parser = OptionParser.new do |opts|
 
 
-			opts.banner = "Usage: \"biosphere [options] <action>\""
+            opts.banner = "Usage: \"biosphere [options] <action>\""
 
-			opts.separator ""
-			opts.separator "Commands:"
-			opts.separator "\tbuild\tWrite tf files as json into build directory"
-			opts.separator "\tplan\tRun the planning phase"
-			opts.separator "\tcommit\tCommit changes and update the infrastructure"
-			opts.separator "\tlock\tAcquire lock for remote state"
-			opts.separator "\tunlock\tRelease lock for remote state"
-			opts.separator "\taction [action]\tCall an action defined in the application .rb files"
-			opts.separator ""
+            opts.separator ""
+            opts.separator "Commands:"
+            opts.separator "\tbuild\tWrite tf files as json into build directory"
+            opts.separator "\tplan\tRun the planning phase"
+            opts.separator "\tcommit\tCommit changes and update the infrastructure"
+            opts.separator "\tlock\tAcquire lock for remote state"
+            opts.separator "\tunlock\tRelease lock for remote state"
+            opts.separator "\taction [action]\tCall an action defined in the application .rb files"
+            opts.separator ""
 
-			opts.on_tail("-h", "--help", "Show this message") do
-				puts opts
-				exit
-			end
+            opts.on_tail("-h", "--help", "Show this message") do
+                puts opts
+                exit
+            end
 
-			opts.on("--src PATH", "Directory where the application .rb files are") do |path|
-				options.src = path
-			end
+            opts.on("--src PATH", "Directory where the application .rb files are") do |path|
+                options.src = path
+            end
 
-			opts.on("--build-dir PATH", "Directory where to build json files") do |path|
-				options.build_dir = path
-			end
+            opts.on("--build-dir PATH", "Directory where to build json files") do |path|
+                options.build_dir = path
+            end
 
-			opts.on_tail("-v", "--version", "Show version") do
-				puts options.version
-				exit
-			end
+            opts.on_tail("-v", "--version", "Show version") do
+                puts options.version
+                exit
+            end
 
-		end
+        end
 
-		opt_parser.parse!(args)
-		options
-	end
+        opt_parser.parse!(args)
+        options
+    end
 
 end
 
 if !STDOUT.isatty
-	String.disable_colorization true
+    String.disable_colorization true
 end
 
 options = BiosphereOpts.parse(ARGV)
 
 if ARGV.length == 0
-	STDERR.puts "No action spesified. Use -h to get help."
-	exit -1
+    STDERR.puts "No action spesified. Use -h to get help."
+    exit -1
 end
 
 if !File.directory?(options.src)
-	STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
-	exit -1
+    STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
+    exit -1
 end
 
 if options.build_dir
-	if !File.directory?(options.build_dir)
-		STDERR.puts "Creating build directory #{options.build_dir} because it was missing"
-		Dir.mkdir(options.build_dir)
-	end
+    if !File.directory?(options.build_dir)
+        STDERR.puts "Creating build directory #{options.build_dir} because it was missing"
+        Dir.mkdir(options.build_dir)
+    end
 end
 
 if options.src
-	state = Biosphere::State.new
-	suite = Biosphere::Suite.new(options.src, state)
-	if options.src == "./"
-		STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
-	end
+    state = Biosphere::State.new
+    suite = Biosphere::Suite.new(state)
 
-	if suite.load_all() == 0
-		STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
-		exit -1
-	end
+    if options.src == "./"
+        STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
+    end
 
-	if suite.node[:settings][:s3_bucket].nil? || suite.node[:settings][:s3_bucket].empty? || suite.node[:settings][:cluster_name].nil? || suite.node[:settings][:cluster_name].empty?
-		puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
-		exit 1
-	end
-	s3 = S3.new(suite.node[:settings][:s3_bucket], suite.node[:settings][:cluster_name])
-	s3.retrieve("#{options.build_dir}/terraform.tfstate")
-	s3.retrieve("#{options.build_dir}/state.node")
+    if suite.load_all(options.src) == 0
+        STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
+        exit -1
+    end
 
-	# This will update the state which is already passed to the suite.
-	state.load("#{options.build_dir}/state.node")
-	
+    if suite.biosphere_settings[:s3_bucket].nil? || suite.biosphere_settings[:s3_bucket].empty? ||
+        suite.biosphere_settings[:state_name].nil? || suite.biosphere_settings[:state_name].empty?
+        puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
+        exit 1
+    end
+    s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:state_name])
+    s3.retrieve("#{options.build_dir}/state.node")
+
+    # This will update the state which is already passed to the suite.
+    state.filename = "#{options.build_dir}/state.node"
+     if File.exists?(state.filename)
+        puts "Loading state from #{state.filename}"
+        state.load()
+    end
+
 end
 
 if ARGV[0] == "build" && options.src
-	suite.evaluate_resources()
+    suite.evaluate_resources()
 
-	if !File.directory?(options.build_dir)
-		STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
-		exit -1
-	end
+    if !File.directory?(options.build_dir)
+        STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
+        exit -1
+    end
 
-	count = 0
-	suite.write_json_to(options.build_dir) do |file_name, destination, str, proxy|
-		puts "Wrote #{str.length} bytes from #{file_name} to #{destination} (#{proxy.export["resource"].length} resources)"
-		count = count + 1
-	end
+    count = 0
+    suite.write_json_to(options.build_dir) do |file_name, destination, str, deployment|
+        puts "Wrote #{str.length} bytes from #{file_name} to #{destination} (#{deployment.export["resource"].length} resources)"
+        count = count + 1
+    end
 
-	puts "Wrote #{count} files into #{options.build_dir}"
-	state.save()
+    puts "Wrote #{count} files into #{options.build_dir}"
+    state.save()
+    s3.save("#{options.build_dir}/state.node")
 
 elsif ARGV[0] == "plan" && options.src
-	suite.evaluate_plans()
-	ap suite.node, :indent=>-4
+    suite.evaluate_plans()
+    ap suite.node, :indent=>-4
+
+elsif ARGV[0] == "state" && options.src
+    ap suite.state.node, :indent=>-4    
 
 elsif ARGV[0] == "action" && options.src
-	context = Biosphere::ActionContext.new()
-	context.build_directory = options.build_dir
+    context = Biosphere::ActionContext.new()
+    context.build_directory = options.build_dir
 
-	if suite.call_action(ARGV[1], context)
-		STDERR.puts "Executing action #{ARGV[1]}"
-	else
-		STDERR.puts "Could not find action #{ARGV[1]}"
-	end
+    if suite.call_action(ARGV[1], context)
+        STDERR.puts "Executing action #{ARGV[1]}"
+    else
+        STDERR.puts "Could not find action #{ARGV[1]}"
+    end
+    state.save()
+    s3.save("#{options.build_dir}/state.node")
 
-	state.save()
+elsif ARGV[0] == "deployment" && options.src
+
+    suite.deployments.each do |name, deployment|
+        puts "Deployment: #{name}"
+    end
 
 elsif ARGV[0] == "commit" && options.src
-	s3.set_lock()
-	s3.retrieve("#{options.build_dir}/terraform.tfstate")
-	tf_plan = %x( terraform plan -state=#{options.build_dir}/terraform.tfstate #{options.build_dir} )
-	puts "\n" + tf_plan
-	answer = ""
-	while answer.empty? || (answer != "y" && answer != "n")
-		print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
-		answer = STDIN.gets.chomp
-	end
 
-	if answer == "n"
-		puts "\nOk, will not proceed with commit"
-	elsif answer == "y"
-		puts "\nApplying the changes (this may take several minutes)"
-		tf_apply = %x( terraform apply -state=#{options.build_dir}/terraform.tfstate #{options.build_dir})
-		puts "\n" + tf_apply
-		s3.save("#{options.build_dir}/terraform.tfstate")
-		s3.save("#{options.build_dir}/state.node")
-	end
+    if !ARGV[1]
+        puts "Please specify deployment name as the second parameter."
+        puts "Available deployments:"
+        suite.deployments.each do |name, deployment|
+            puts "\t#{name}"
+        end
+        exit -1
+    end
+    deployment = ARGV[1]
 
-	s3.release_lock()
+    s3.set_lock()
+    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
+    tf_plan = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir} )
+    puts "\n" + tf_plan
+    answer = ""
+    while answer.empty? || (answer != "y" && answer != "n")
+        print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
+        answer = STDIN.gets.chomp
+    end
+
+    if answer == "n"
+        puts "\nOk, will not proceed with commit"
+    elsif answer == "y"
+        puts "\nApplying the changes (this may take several minutes)"
+        tf_apply = %x( terraform apply -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
+        puts "\n" + tf_apply
+        s3.save("#{options.build_dir}/#{deployment}.tfstate")
+        s3.save("#{options.build_dir}/state.node")
+    end
+
+    s3.release_lock()
+
+elsif ARGV[0] == "destroy" && options.src
+
+    if !ARGV[1]
+        puts "Please specify deployment name as the second parameter."
+        puts "Available deployments:"
+        suite.deployments.each do |name, deployment|
+            puts "\t#{name}"
+        end
+        exit -1
+    end
+    deployment = ARGV[1]
+
+    s3.set_lock()
+    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
+    answer = ""
+    while answer.empty? || (answer != "y" && answer != "n")
+        print "\nYou are about to destroy deployment #{deployment}? (Answering yes will nuke it from the orbit) y/n: "
+        answer = STDIN.gets.chomp
+    end
+
+    if answer == "n"
+        puts "\nAborted!"
+    elsif answer == "y"
+        puts "\nDestroying deployment #{deployment} (this may take several minutes)"
+        tf_apply = %x( terraform destroy -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
+        puts "\n" + tf_apply
+        s3.save("#{options.build_dir}/#{deployment}.tfstate")
+        s3.save("#{options.build_dir}/state.node")
+    end
+
+    s3.release_lock()
 
 elsif ARGV[0] == "lock"
-	s3.set_lock()
+    s3.set_lock()
 
 elsif ARGV[0] == "unlock"
-	s3.release_lock()
+    s3.release_lock()
 
 else
-	STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
-	exit -1
+    STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
+    exit -1
 end
 

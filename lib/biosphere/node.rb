@@ -2,19 +2,61 @@ require 'pp'
 require 'awesome_print'
 
 class Biosphere
+
     class Node
-        attr_reader :data
-        def initialize(from_string = nil)
-            if from_string
-                blob = Marshal.load(from_string)
-                @data = blob.data
-            else
-                @data = {}
+
+        class Attribute < Hash
+            def deep_set(*args)
+                #puts "deep_set: #{args}"
+                raise ArgumentError, "must pass at least one key, and a value" if args.length < 2
+                value = args.pop
+                args = args.first if args.length == 1 && args.first.kind_of?(Array)
+
+                key = args.first
+                raise ArgumentError, "must be a number" if self.kind_of?(Array) && !key.kind_of?(Numeric)
+
+                if args.length == 1
+                    self[key] = value
+                else
+                    child = self[key]
+                    unless child.respond_to?(:store_path)
+                        self[key] = self.class.new
+                        child = self[key]
+                    end
+                    child.deep_set(args[1..-1].push, value)
+                end
             end
+        end
+
+        attr_reader :data
+        def initialize(from = nil)
+            if from && from.is_a?(String)
+                blob = Marshal.load(from)
+                if blob.class == Biosphere::Node
+                    raise "Tried to load old state format. Unfortunately we are not backwards compatible"
+                end
+                @data = blob
+            elsif from
+                @data = from
+            else
+                @data = Attribute.new
+            end
+        end
+
+        def data
+            return @data
+        end
+
+        def data=(s)
+            @data = s
         end
 
         def include?(symbol)
             @data.include?(symbol)
+        end
+
+        def deep_set(*args)
+            @data.deep_set(*args)
         end
 
         def []=(symbol, *args)
@@ -22,14 +64,15 @@ class Biosphere
         end
 
         def [](symbol, *args)
-            if !@data[symbol]
-                @data[symbol] = Node.new
-            end
             return @data[symbol]
         end
 
+        def merge!(obj)
+            @data.deep_merge!(obj)
+        end
+
         def save()
-            return Marshal.dump(self)
+            return Marshal.dump(@data)
         end
 
         def values
