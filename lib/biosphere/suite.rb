@@ -15,8 +15,6 @@ class Biosphere
             @actions = {}
             @state = state
             @deployments = {}
-
-            @plan_proxy = PlanProxy.new(self, @state)
         end
 
         def register(deployment)
@@ -28,20 +26,14 @@ class Biosphere
             deployment.state = @state
         end
 
-        def node(name=nil)
-            if name
-                return @plan_proxy.node[name]
-            else
-                return @plan_proxy.node
-            end
-        end
-
-
         def evaluate_resources()
             @deployments.each do |name, deployment|
                 deployment.evaluate_resources()
             end
+        end
 
+        def node
+            @state.node
         end
 
         def load_all(directory)
@@ -49,7 +41,7 @@ class Biosphere
             files = Dir::glob("#{directory}/*.rb")
 
             for file in files
-                proxy = Biosphere::TerraformProxy.new(file, @plan_proxy)
+                proxy = Biosphere::TerraformProxy.new(file, self)
 
                 @files[file[directory.length+1..-1]] = proxy
             end

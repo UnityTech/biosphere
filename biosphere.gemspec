@@ -28,4 +28,5 @@ Gem::Specification.new do |s|
   s.add_dependency('colorize', '0.8.1')
   s.add_dependency('aws-sdk', '~> 2')
   s.add_dependency('deep_merge', '1.1.1')
+  s.add_dependency('class_attribute', '0.1.4')
 end

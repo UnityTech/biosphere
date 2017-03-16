@@ -32,15 +32,6 @@ class Biosphere
 
     end
 
-    class PlanProxy
-        attr_accessor :suite, :state
-        def initialize(suite, state)
-            @suite = suite
-            @state = state
-        end
-
-    end
-
     class ResourceProxy
         attr_reader :output
         attr_reader :caller
@@ -75,7 +66,7 @@ class Biosphere
 
         def get(symbol)
             return @output[symbol]
-        end        
+        end
 
         def node
             return @caller.node
@@ -103,13 +94,12 @@ class Biosphere
         attr_accessor :export
         attr_accessor :resources
         attr_accessor :actions
-        attr_accessor :plan_proxy
         attr_reader :src_path
 
         include Kube
 
 
-        def initialize(script_name, plan_proxy = nil)
+        def initialize(script_name, suite)
             @script_name = script_name
             @src_path = [File.dirname(script_name)]
 
@@ -119,14 +109,14 @@ class Biosphere
                 "variable" => {},
                 "output" => {}
             }
-            @plan_proxy = plan_proxy
+            @suite = suite
             @actions = {}
             @deployments = []
 
         end
 
         def register(deployment)
-            @plan_proxy.suite.register(deployment)
+            @suite.register(deployment)
         end
 
         def load_from_file()

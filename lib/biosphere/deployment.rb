@@ -48,7 +48,6 @@ class Biosphere
         end
 
         def setup(settings)
-
         end
 
         def node
@@ -102,16 +101,6 @@ class Biosphere
 
         end
 
-        def action(name, description, &block)
-            @actions[name] = {
-                :name => name,
-                :description => description,
-                :block => block,
-                :location => caller[0],
-                # :src_path => @src_path.clone
-            }
-        end
-
         def output(name, value)
             @export["output"][name] = {
                 "value" => value
@@ -119,12 +108,13 @@ class Biosphere
         end
 
         def evaluate_resources()
-            puts "Evaluating Deployment resources"
 
+            # Call first sub-deployments
             @deployments.each do |deployment|
                 deployment.evaluate_resources()
             end
 
+            # And finish with our own resources
             @resources.each do |resource|
                 proxy = ResourceProxy.new(self)
                 proxy.instance_eval(&resource[:block])
