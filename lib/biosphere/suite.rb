@@ -100,6 +100,5 @@ class Biosphere
             end
 
         end
-
     end
 end

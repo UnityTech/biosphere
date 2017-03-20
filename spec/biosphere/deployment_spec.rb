@@ -243,7 +243,44 @@ RSpec.describe Biosphere::Deployment do
             expect(a.export["output"]["foobar"]["value"]).to eq("${aws_instance.master.0.public_ip}")
             
         end
-    end    
+
+        it "is possible to add a block to handle output value after applying terraform" do
+
+            class TestDeployment < Biosphere::Deployment
+                def setup(settings)
+                    output "foobar", "${aws_instance.master.0.public_ip}" do |value|                      
+                        node[:foobar] = value
+                    end
+                end
+            end
+
+            a = TestDeployment.new(default_settings)
+            
+            a.evaluate_outputs({
+                "foobar" => {
+                    "sensitive" => false,
+                    "type" => "string",
+                    "value" => "hello"
+                }
+            })
+
+            expect(a.node[:foobar]).to eq("hello")
+
+        end
+
+        it "can lookup output values after" do
+
+            s = Biosphere::Suite.new(Biosphere::State.new)
+            s.load_all("spec/biosphere/suite_test1/")
+            s.evaluate_resources()
+
+            s.deployments["test1"].load_outputs("spec/biosphere/suite_test1/build/output.tfstate")
+
+            expect(s.deployments["test1"].node[:foobar]).to eq("hello")
+
+        end
+        
+    end
 
     describe("expose variables") do
         it("is possible to define a simple string variable") do

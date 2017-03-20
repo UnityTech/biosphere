@@ -67,6 +67,5 @@ RSpec.describe Biosphere::Suite do
             s.load_all("spec/biosphere/deployment_test/")
             s.evaluate_resources()
         end
-
     end
 end

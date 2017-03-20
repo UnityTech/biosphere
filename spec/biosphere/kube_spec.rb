@@ -30,7 +30,7 @@ RSpec.describe Biosphere::TerraformProxy do
         p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
         resources = nil
         p.load_from_block do
-            resources = kube_load_manifest_file("spec/biosphere/kube/test.yaml")
+            resources = ::Biosphere::Kube::load_resources("spec/biosphere/kube/test.yaml")
         end
 
         expect(resources[0].apiVersion).to eq("v1")
@@ -55,9 +55,11 @@ RSpec.describe Biosphere::TerraformProxy do
     
     it "can load a directory hierarchy of manifest files" do
         p = Biosphere::TerraformProxy.new("test", Biosphere::State.new)
-        resources = nil
+        resources = []
         p.load_from_block do
-            resources = kube_load_manifest_files("spec/biosphere/kube2/")
+            ::Biosphere::Kube::find_manifest_files("spec/biosphere/kube2/").each do |file|
+                resources += ::Biosphere::Kube::load_resources(file)
+            end
         end
 
         expect(resources.length).to eq(3)

@@ -180,8 +180,12 @@ elsif ARGV[0] == "commit" && options.src
         puts "\nOk, will not proceed with commit"
     elsif answer == "y"
         puts "\nApplying the changes (this may take several minutes)"
-        tf_apply = %x( terraform apply -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
+        state_file = "#{options.build_dir}/#{deployment}.tfstate"
+        tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
         puts "\n" + tf_apply
+        puts "Loading outputs from #{state_file}"
+        suite.deployments[deployment].load_outputs(state_file)
+        state.save()
         s3.save("#{options.build_dir}/#{deployment}.tfstate")
         s3.save("#{options.build_dir}/state.node")
     end

@@ -2,6 +2,7 @@ require 'yaml'
 require 'kubeclient'
 require 'erb'
 require 'hashdiff'
+require 'ostruct'
 
 class String
     # Converts "CamelCase"" into "camel_case"
@@ -114,6 +115,46 @@ class Biosphere
 
             end
 
+            def apply_resource(resource)
+                name = resource[:metadata][:name]
+                responses = []
+                not_found = false
+                begin
+                    response = get(resource)
+                rescue RestClient::NotFound => e
+                    not_found = true
+                end
+
+                if not_found
+                    begin
+                        response = post(resource)
+                        puts "Created resource #{response[:resource]}"
+                        responses << response
+                    rescue RestClient::UnprocessableEntity => e
+                        pp e
+                        pp JSON.parse(e.response.body)
+                    end
+                else
+                    puts "Updating resource #{response[:resource]}"
+
+                    # Get the current full resource from apiserver
+                    current_resource = response[:body]
+
+                    update_resource = Kube.kube_merge_resource_for_put!(current_resource, resource)
+
+                    begin
+                        responses << put(update_resource)
+                    rescue RestClient::Exception => e
+                        puts "Error updating resource: #{e} #{e.class}"
+                        pp JSON.parse(e.response)
+                    rescue RestClient::Exception => e
+                        puts "Misc exception: #{e}, #{e.class}, #{e.response}"
+                    end
+                    
+                    return responses
+                end
+            end
+
         end # end of class Client
 
         def kube_test(str)
@@ -124,25 +165,18 @@ class Biosphere
             return Client.new(hostname, ssl_options)
         end
 
-        def kube_load_manifest_files(dir)
-            files = Dir[dir + "/**/*.erb"]
-            resources = []
-            files.each do |file|
-                resources += kube_load_manifest_file(file)
-            end
+        def self.find_manifest_files(dir)
+            files = []
+            files += Dir[dir + "/**/*.erb"]
 
-            files = Dir[dir + "/**/*.yaml"]
-            files.each do |file|
-                resources += kube_load_manifest_file(file)
-            end
-
-            resources
+            files += Dir[dir + "/**/*.yaml"]
+            files
         end
 
-        def kube_load_manifest_file(file)
+        def self.load_resources(file, context={})
             resources = []
             puts "Loading file #{file}"
-            str = ERB.new(IO.read(file)).result(binding)
+            str = ERB.new(IO.read(file)).result(OpenStruct.new(context).instance_eval { binding })
             begin
                 Psych.load_stream(str) do |document|
                     kind = document["kind"]
@@ -206,44 +240,6 @@ class Biosphere
             return new_version
         end
 
-        def kube_apply_resource(client, resource)
-            name = resource[:metadata][:name]
-            responses = []
-            not_found = false
-            begin
-                response = client.get(resource)
-            rescue RestClient::NotFound => e
-                not_found = true
-            end
 
-            if not_found
-                begin
-                    response = client.post(resource)
-                    puts "Created resource #{response[:resource]}"
-                    responses << response
-                rescue RestClient::UnprocessableEntity => e
-                    pp e
-                    pp JSON.parse(e.response.body)
-                end
-            else
-                puts "Updating resource #{response[:resource]}"
-
-                # Get the current full resource from apiserver
-                current_resource = response[:body]
-
-                update_resource = Kube.kube_merge_resource_for_put!(current_resource, resource)
-
-                begin
-                    responses << client.put(update_resource)
-                rescue RestClient::Exception => e
-                    puts "Error updating resource: #{e} #{e.class}"
-                    pp JSON.parse(e.response)
-                rescue RestClient::Exception => e
-                    puts "Misc exception: #{e}, #{e.class}, #{e.response}"
-                end
-                
-                return responses
-            end
-        end        
     end
 end

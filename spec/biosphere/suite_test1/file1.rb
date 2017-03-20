@@ -5,6 +5,11 @@ class TestDeployment1 < ::Biosphere::Deployment
         resource "type", "name" do
             set :foo, "file1"
         end
+
+        output "foobar", "${aws_instance.foobar.0.public_ip}" do |value|
+            node[:foobar] = value
+        end
+
     end
 end
 

@@ -44,7 +44,10 @@ RSpec.describe Biosphere::State do
         foo = s.node[:deployments]["foo"]
         bar = s.node[:deployments]["bar"]
 
-        structure = {
+        structure = Class.new {
+            attr_accessor :data
+        }.new
+        structure.data = {
             root: "root",
             deployments: {
                 "foo" => {

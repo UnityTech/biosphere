@@ -58,6 +58,7 @@ class Biosphere
             @resources = []
             @actions = {}
             @deployments = []
+            @outputs = []
 
             self.setup(settings)
 
@@ -124,10 +125,46 @@ class Biosphere
 
         end
 
-        def output(name, value)
+        def output(name, value, &block)
             @export["output"][name] = {
                 "value" => value
             }
+
+            if block_given?
+                output = {
+                    :name => name,
+                    :block => block
+                }
+
+                @outputs << output
+            end
+        end
+
+        def evaluate_outputs(outputs)
+
+            # Call first sub-deployments
+            @deployments.each do |deployment|
+                deployment.evaluate_outputs(outputs)
+            end
+            
+            @outputs.each do |output|
+                value = outputs[output[:name]]
+                instance_exec(value["value"], value, &output[:block])
+            end
+        end
+
+        def load_outputs(tfstate_filename)
+
+            begin
+                tf_state = JSON.parse(File.read(tfstate_filename))
+            rescue SystemCallError
+                puts "Couldn't read Terraform statefile, can't continue"
+                exit
+            end
+
+            outputs = tf_state["modules"].first["outputs"]
+
+            evaluate_outputs(outputs)
         end
 
         def evaluate_resources()
