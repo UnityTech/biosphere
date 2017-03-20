@@ -216,7 +216,7 @@ elsif ARGV[0] == "destroy" && options.src
         puts "\nAborted!"
     elsif answer == "y"
         puts "\nDestroying deployment #{deployment} (this may take several minutes)"
-        tf_apply = %x( terraform destroy -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
+        tf_apply = %x( terraform destroy -force -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
         puts "\n" + tf_apply
         s3.save("#{options.build_dir}/#{deployment}.tfstate")
         s3.save("#{options.build_dir}/state.node")
