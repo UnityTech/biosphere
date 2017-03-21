@@ -248,8 +248,8 @@ RSpec.describe Biosphere::Deployment do
 
             class TestDeployment < Biosphere::Deployment
                 def setup(settings)
-                    output "foobar", "${aws_instance.master.0.public_ip}" do |value|                      
-                        node[:foobar] = value
+                    output "foobar", "${aws_instance.master.0.public_ip}" do |key, value|
+                        node[:foobar] = [key, value]
                     end
                 end
             end
@@ -264,7 +264,7 @@ RSpec.describe Biosphere::Deployment do
                 }
             })
 
-            expect(a.node[:foobar]).to eq("hello")
+            expect(a.node[:foobar]).to eq(["foobar", "hello"])
 
         end
 
@@ -276,7 +276,7 @@ RSpec.describe Biosphere::Deployment do
 
             s.deployments["test1"].load_outputs("spec/biosphere/suite_test1/build/output.tfstate")
 
-            expect(s.deployments["test1"].node[:foobar]).to eq("hello")
+            expect(s.deployments["test1"].node[:foobar]).to eq(["foobar", "hello"])
 
         end
         

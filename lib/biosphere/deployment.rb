@@ -155,7 +155,7 @@ class Biosphere
             
             @outputs.each do |output|
                 value = outputs[output[:name]]
-                instance_exec(value["value"], value, &output[:block])
+                instance_exec(output[:name], value["value"], value, &output[:block])
             end
         end
 

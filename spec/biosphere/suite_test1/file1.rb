@@ -6,8 +6,8 @@ class TestDeployment1 < ::Biosphere::Deployment
             set :foo, "file1"
         end
 
-        output "foobar", "${aws_instance.foobar.0.public_ip}" do |value|
-            node[:foobar] = value
+        output "foobar", "${aws_instance.foobar.0.public_ip}" do |key, value|
+            node[:foobar] = [key, value]
         end
 
     end
