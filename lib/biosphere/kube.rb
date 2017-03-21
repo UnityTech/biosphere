@@ -175,7 +175,7 @@ class Biosphere
 
         def self.load_resources(file, context={})
             resources = []
-            puts "Loading file #{file}"
+            #puts "Loading file #{File.absolute_path(file)}"
             str = ERB.new(IO.read(file)).result(OpenStruct.new(context).instance_eval { binding })
             begin
                 Psych.load_stream(str) do |document|

@@ -24,7 +24,7 @@ class Biosphere
                 @filename = filename
             end
             data = Marshal.load(File.read(@filename))
-            puts "Loading data from file #{@filename}: #{data}"
+            #puts "Loading data from file #{@filename}: #{data}"
             load_from_structure!(data)
         end
 

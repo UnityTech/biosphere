@@ -6,7 +6,6 @@ load 'lib/template_file.rb'
 class TestDeployment < ::Biosphere::Deployment
 
     def setup(settings)
-        puts "TestDeployment called *******"
         helper = DeploymentHelper.new(self)
         helper.my_template("Garo")
 
