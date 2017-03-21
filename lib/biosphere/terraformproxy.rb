@@ -144,6 +144,7 @@ class Biosphere
             src_path = Pathname.new(@src_path.last + "/" + File.dirname(filename)).cleanpath.to_s
             # Push current src_path and overwrite @src_path so that it tracks recursive loads
             @src_path << src_path
+            $current_biosphere_path_stack = src_path
 
             #puts "Trying to open file: " + src_path + "/" + File.basename(filename)
             if File.exists?(src_path + "/" + File.basename(filename))

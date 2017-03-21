@@ -22,6 +22,28 @@ RSpec.describe Biosphere::Settings do
         expect(TestSettings.settings[:name]).to eq("foo")
     end
 
+    it "can have manifests" do
+        class TestSettings < Biosphere::Settings
+            settings({
+                name: "foo"
+            })
+
+            add_feature_manifest :example, "foo.yaml"
+            add_feature_manifest :example, "bar.yaml"
+            add_feature_manifest :example2, "bar2.yaml"
+        end
+        
+        expect(Biosphere::Settings.settings_hash).to eq({})
+        expect(TestSettings.settings_hash[:name]).to eq("foo")
+        expect(Biosphere::Settings.settings).to eq({})
+        expect(TestSettings.settings[:name]).to eq("foo")
+
+        expect(Biosphere::Settings.feature_manifests[:example]).to eq(nil)
+        expect(TestSettings.feature_manifests(:example)[0]).to eq("foo.yaml")
+        expect(TestSettings.feature_manifests(:example)[1]).to eq("bar.yaml")
+        expect(TestSettings.feature_manifests(:example2)[0]).to eq("bar2.yaml")
+    end
+
     it "can be created multiple times into an instance" do
 
         a = Biosphere::Settings.new({foo: "1"})
@@ -43,6 +65,8 @@ RSpec.describe Biosphere::Settings do
                     s3_bucket: "test"
                 }
             })
+
+            add_feature_manifest :example, "foo.yaml"
         end
 
         class NestedSettings < SuperSettings
@@ -52,6 +76,9 @@ RSpec.describe Biosphere::Settings do
                     state_name: "test-state"
                 }
             })
+
+            add_feature_manifest :example, "bar.yaml"
+            
         end
 
         expect(Biosphere::Settings.settings).to eq({})
@@ -62,8 +89,17 @@ RSpec.describe Biosphere::Settings do
         expect(NestedSettings.settings[:name]).to eq("overwritten")
         expect(NestedSettings.settings[:biosphere]).to eq({s3_bucket: "test", state_name: "test-state"})
 
+        expect(Biosphere::Settings.feature_manifests[:example]).to eq(nil)
+        expect(SuperSettings.feature_manifests[:example][0]).to eq("foo.yaml")
+        expect(SuperSettings.feature_manifests[:example][1]).to eq(nil)
+        expect(NestedSettings.feature_manifests[:example][0]).to eq("foo.yaml")
+        expect(NestedSettings.feature_manifests[:example][1]).to eq("bar.yaml")
+
+
         a = NestedSettings.new
         expect(a.settings[:name]).to eq("overwritten")
+        expect(a.feature_manifests[:example][0]).to eq("foo.yaml")
+        expect(a.feature_manifests[:example][1]).to eq("bar.yaml")
         
     end
 

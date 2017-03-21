@@ -5,7 +5,7 @@ class Biosphere
 
     class Deployment
 
-        attr_reader :export, :name, :_settings
+        attr_reader :export, :name, :_settings, :feature_manifests
         attr_accessor :state, :node
         def initialize(*args)
 
@@ -25,7 +25,9 @@ class Biosphere
             elsif args[0].kind_of?(::Biosphere::Settings)
                 @_settings = args.shift
                 settings = @_settings.settings
+                @feature_manifests = @_settings.feature_manifests
             end
+
 
             @export = {
                 "provider" => {},
@@ -59,6 +61,10 @@ class Biosphere
             @actions = {}
             @deployments = []
             @outputs = []
+
+            if @feature_manifests
+                node[:feature_manifests] = @feature_manifests
+            end
 
             self.setup(settings)
 
@@ -187,7 +193,6 @@ class Biosphere
 
                 @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
             end
-
         end
 
         def to_json(pretty=false)
