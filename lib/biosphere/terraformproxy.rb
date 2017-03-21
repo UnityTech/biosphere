@@ -157,6 +157,7 @@ class Biosphere
 
             # Restore it as we are unwinding the call stack
             @src_path.pop
+            $current_biosphere_path_stack = @src_path.last
         end
 
         include Biosphere::Mixing::FromFile
