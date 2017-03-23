@@ -2,6 +2,10 @@ require 'aws-sdk'
 
 class S3
     def initialize(bucket, main_key)
+        if !ENV['AWS_REGION'] || !ENV['AWS_SECRET_KEY'] || !ENV['AWS_ACCESS_KEY']
+            puts "You need to specify AWS_REGION, AWS_ACCESS_KEY and AWS_SECRET_KEY"
+            exit -1
+        end
         @client = Aws::S3::Client.new
         @bucket_name = bucket
         @main_key = main_key
