@@ -89,7 +89,7 @@ if options.src
         STDERR.puts "Loading suite from current directory (#{File.expand_path(options.src)}). Use --src to change the path"
     end
 
-    if suite.load_all(options.src) == 0
+    if suite.load_all(options.src) == 0 || suite.deployments.size == 0
         STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
         exit -1
     end
