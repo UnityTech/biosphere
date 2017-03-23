@@ -164,6 +164,14 @@ elsif ARGV[0] == "commit" && options.src
         exit -1
     end
     deployment = ARGV[1]
+    if !suite.deployments[deployment]
+        puts "Deployment #{deployment} not found!"
+        puts "Available deployments:"
+        suite.deployments.each do |name, deployment|
+            puts "\t#{name}"
+        end
+        exit -1
+    end
 
     s3.set_lock()
     s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
@@ -182,7 +190,7 @@ elsif ARGV[0] == "commit" && options.src
         state_file = "#{options.build_dir}/#{deployment}.tfstate"
         tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
         puts "\n" + tf_apply
-        puts "Loading outputs from #{state_file}"
+        puts "Loading outputs for #{deployment} from #{state_file}"
         suite.deployments[deployment].load_outputs(state_file)
         state.save()
         s3.save("#{options.build_dir}/#{deployment}.tfstate")
