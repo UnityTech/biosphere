@@ -140,6 +140,15 @@ elsif ARGV[0] == "action" && options.src
     context = Biosphere::ActionContext.new()
     context.build_directory = options.build_dir
 
+    if !ARGV[1] || ARGV[1] == "--help" || ARGV[1] == "-h" || ARGV[1] == "help"
+        puts "Syntax: biosphere action <command>"
+        puts "Available actions:"
+        suite.actions.each do |key, value|
+            puts "\t#{key}"
+        end
+        exit -1
+    end
+
     if suite.call_action(ARGV[1], context)
     else
         STDERR.puts "Could not find action #{ARGV[1]}"
