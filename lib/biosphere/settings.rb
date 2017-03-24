@@ -37,7 +37,7 @@ class Biosphere
                 if settings
                     c = @settings_hash ||= ::Hash.new
                     c = DeepDup.deep_dup(c)
-                    c.deep_merge!(settings)
+                    c.deep_merge!(settings, {:overwrite_arrays => true})
                     @settings_hash = c
                 end
                 return @settings_hash
