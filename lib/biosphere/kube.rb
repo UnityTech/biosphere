@@ -177,7 +177,33 @@ class Biosphere
         def self.load_resources(file, context={})
             resources = []
             #puts "Loading file #{File.absolute_path(file)}"
-            str = ERB.new(IO.read(file)).result(OpenStruct.new(context).instance_eval { binding })
+            data = IO.read(file)
+            begin
+                str = ERB.new(data).result(OpenStruct.new(context).instance_eval { binding })
+            rescue NoMethodError => e
+                puts "Error evaluating erb templating for #{file}. Error: #{e}"
+                m = /\(erb\):([0-9]+):/.match(e.backtrace.first)
+                if m
+                    puts "Error at line #{m[1]}. This is before ERB templating."
+                    linenumber = m[1].to_i
+                    if linenumber > 0 # Linenumbers seems to be off with 1 as the array is starting at zero
+                        linenumber = linenumber - 1
+                    end
+                    lines = data.split("\n")
+                    start_line = [0, linenumber - 3].max
+                    end_line = [lines.length - 1, linenumber + 3].min
+                    lines[start_line..end_line].each_with_index do |line, num|
+                        num += start_line
+                        if num == linenumber
+                            STDERR.printf("%04d>  %s\n".red, num, line)
+                        else
+                            STDERR.printf("%04d|  %s\n", num, line)
+                        end
+                    end
+                end
+                raise e
+            end
+
             begin
                 Psych.load_stream(str) do |document|
                     kind = document["kind"]
@@ -190,11 +216,16 @@ class Biosphere
                 STDERR.puts "Here are the relevant lines. Error '#{e.problem}' occured at line #{e.line}"
                 STDERR.puts "Notice that yaml is very picky about indentation when you have arrays and maps. Check those first."
                 lines = str.split("\n")
-                start_line = [0, e.line - 3].max
-                end_line = [lines.length - 1, e.line + 3].min
+                linenumber = e.line
+                if linenumber > 0 # Linenumbers seems to be off with 1 as the array is starting at zero
+                    linenumber = linenumber - 1
+                end
+                
+                start_line = [0, linenumber - 3].max
+                end_line = [lines.length - 1, linenumber + 3].min
                 lines[start_line..end_line].each_with_index do |line, num|
                     num += start_line
-                    if num == e.line
+                    if num == linenumber
                         STDERR.printf("%04d>  %s\n".red, num, line)
                     else
                         STDERR.printf("%04d|  %s\n", num, line)
