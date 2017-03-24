@@ -32,6 +32,7 @@ class Biosphere
 
                 @clients << ::Kubeclient::Client.new("#{hostname}/api" , "v1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/extensions/" , "v1beta1", ssl_options: ssl_options)
+                @clients << ::Kubeclient::Client.new("#{hostname}/apis/batch/" , "v2alpha1", ssl_options: ssl_options)
 
                 @clients.each { |c| c.discover }
             end
