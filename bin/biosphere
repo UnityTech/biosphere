@@ -7,6 +7,7 @@ require 'pp'
 require "awesome_print"
 require 'colorize'
 require 'biosphere/s3.rb'
+require 'pty'
 
 class BiosphereOpts
 
@@ -197,8 +198,19 @@ elsif ARGV[0] == "commit" && options.src
     elsif answer == "y"
         puts "\nApplying the changes (this may take several minutes)"
         state_file = "#{options.build_dir}/#{deployment}.tfstate"
-        tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
-        puts "\n" + tf_apply
+        #tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
+        #puts "\n" + tf_apply
+        begin
+            PTY.spawn("terraform apply -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
+            begin
+                stdout.each { |line| puts line }
+                rescue Errno::EIO
+                end
+            end
+        rescue PTY::ChildExited
+            puts "The child process exited!"
+        end
+
         puts "Loading outputs for #{deployment} from #{state_file}"
         suite.deployments[deployment].load_outputs(state_file)
         state.save()
