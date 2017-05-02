@@ -164,6 +164,23 @@ elsif ARGV[0] == "deployment" && options.src
         puts "Deployment: #{name}"
     end
 
+elsif ARGV[0] == "statereset" && options.src
+
+    answer = ""
+    while answer.empty? || (answer != "y" && answer != "n")
+        print "\nAre you sure you want to do a full state reset for #{options.build_dir} y/n: "
+        answer = STDIN.gets.chomp
+    end
+
+    if answer == "n"
+        puts "\nOk, will not proceed with state reset"
+    elsif answer == "y"
+        state = Biosphere::State.new
+        state.filename = "#{options.build_dir}/state.node"
+        state.save()
+        s3.save("#{options.build_dir}/state.node")
+    end
+
 elsif ARGV[0] == "commit" && options.src
 
     if !ARGV[1]
