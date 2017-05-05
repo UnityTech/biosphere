@@ -81,10 +81,17 @@ class Biosphere
         end
 
         def id_of(type,name)
+            if self.name
+                name = self.name + "_" + name
+            end
             "${#{type}.#{name}.id}"
         end
 
         def output_of(type, name, *values)
+            if self.name
+                name = self.name + "_" + name
+            end
+            
             "${#{type}.#{name}.#{values.join(".")}}"
         end
 

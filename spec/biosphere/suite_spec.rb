@@ -14,8 +14,8 @@ RSpec.describe Biosphere::Suite do
         s.load_all("spec/biosphere/suite_test1")
         s.evaluate_resources()
 
-        expect(s.deployments["test1"].export["resource"]["type"]["name"]).to eq({:foo => "file1"})
-        expect(s.deployments["test2"].export["resource"]["type"]["name"]).to eq({:foo => "file2"})
+        expect(s.deployments["test1"].export["resource"]["type"]["test1_name"]).to eq({:foo => "file1"})
+        expect(s.deployments["test2"].export["resource"]["type"]["test2_name"]).to eq({:foo => "file2"})
     end
 
     it "require_relative works with suite" do
@@ -23,8 +23,8 @@ RSpec.describe Biosphere::Suite do
         s.load_all("spec/biosphere/suite_test2")
         s.evaluate_resources()
 
-        expect(s.deployments["TestDeployment"].export["resource"]["type"]["name1"]).to eq({:foo => "I'm Garo"})
-        expect(s.deployments["TestDeployment"].export["resource"]["type"]["name2"]).to eq({:property => "test"})
+        expect(s.deployments["TestDeployment"].export["resource"]["type"]["helper_name1"]).to eq({:foo => "I'm Garo"})
+        expect(s.deployments["TestDeployment"].export["resource"]["type"]["helper_name2"]).to eq({:property => "test"})
     end
 
     it "can find action from all files" do
@@ -44,8 +44,8 @@ RSpec.describe Biosphere::Suite do
             FileUtils.remove_dir("build")
         end
         s.write_json_to("build")
-        expect(JSON.parse(IO.read("build/test1.json.tf"))["resource"]["type"]["name"]).to eq({"foo" => "file1"})
-        expect(JSON.parse(IO.read("build/test2.json.tf"))["resource"]["type"]["name"]).to eq({"foo" => "file2"})
+        expect(JSON.parse(IO.read("build/test1.json.tf"))["resource"]["type"]["test1_name"]).to eq({"foo" => "file1"})
+        expect(JSON.parse(IO.read("build/test2.json.tf"))["resource"]["type"]["test2_name"]).to eq({"foo" => "file2"})
 
         if File.directory?("build")
             FileUtils.remove_dir("build")

@@ -12,4 +12,4 @@ end
 
 action "two", "desc"
 
-TestDeployment2.new(suite, {deployment_name: "test2"})
+TestDeployment2.new(suite, "test2")

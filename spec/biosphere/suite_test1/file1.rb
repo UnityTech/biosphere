@@ -6,7 +6,7 @@ class TestDeployment1 < ::Biosphere::Deployment
             set :foo, "file1"
         end
 
-        output "foobar", "${aws_instance.foobar.0.public_ip}" do |key, value|
+        output "foobar", output_of("aws_instance", "foobar", "0", "public_ip") do |deployment_name, key, value|
             node[:foobar] = [key, value]
         end
 
@@ -15,4 +15,4 @@ end
 
 action "one", "desc"
 
-TestDeployment1.new(suite, {deployment_name: "test1"})
+TestDeployment1.new(suite, "test1")

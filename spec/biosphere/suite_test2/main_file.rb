@@ -6,7 +6,7 @@ load 'lib/template_file.rb'
 class TestDeployment < ::Biosphere::Deployment
 
     def setup(settings)
-        helper = DeploymentHelper.new(self)
+        helper = DeploymentHelper.new(self, "helper")
         helper.my_template("Garo")
 
         resource "type", "name3" do
@@ -15,4 +15,4 @@ class TestDeployment < ::Biosphere::Deployment
     end
 end
 
-TestDeployment.new(suite, {deployment_name: "TestDeployment"})
+TestDeployment.new(suite, "TestDeployment")
