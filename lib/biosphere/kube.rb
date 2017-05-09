@@ -176,7 +176,7 @@ class Biosphere
 
         def self.load_resources(file, context={})
             resources = []
-            #puts "Loading file #{File.absolute_path(file)}"
+            puts "Loading file #{File.absolute_path(file)}"
             data = IO.read(file)
             begin
                 str = ERB.new(data).result(OpenStruct.new(context).instance_eval { binding })
@@ -184,7 +184,7 @@ class Biosphere
                 puts "Error evaluating erb templating for #{file}. Error: #{e}"
                 m = /\(erb\):([0-9]+):/.match(e.backtrace.first)
                 if m
-                    puts "Error at line #{m[1]}. This is before ERB templating."
+                    puts "Error at line #{m[1]}. This is before ERB templating. Remember to run biosphere build if you changed settings."
                     linenumber = m[1].to_i
                     if linenumber > 0 # Linenumbers seems to be off with 1 as the array is starting at zero
                         linenumber = linenumber - 1

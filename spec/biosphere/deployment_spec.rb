@@ -3,11 +3,11 @@ require 'pp'
 
 RSpec.describe Biosphere::Deployment do
 
-    default_settings = { deployment_name: "unnamed" }
     describe "constructor" do
         it "can be created" do
-            d = Biosphere::Deployment.new(default_settings)
+            d = Biosphere::Deployment.new("test name, please ignore")
             expect(d).not_to eq(nil)
+            expect(d.name).to eq("test name, please ignore")
         end
 
         it "will call setup in constructor" do
@@ -23,7 +23,7 @@ RSpec.describe Biosphere::Deployment do
             end
 
             expect {
-                d = MyDeployment1.new(default_settings)
+                d = MyDeployment1.new("test name")
             }.to raise_exception CustomError
         end
 
@@ -36,8 +36,9 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = MyDeployment2.new("", {deployment_name: "test", value: "test"})
+            d = MyDeployment2.new("test name", {value: "test"})
             expect(d.test[:value]).to eq("test")
+            expect(d.name).to eq("test name")
         end
 
 
@@ -50,9 +51,10 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = MyDeployment3.new("", Biosphere::Settings.new({value: "test2"}))
+            d = MyDeployment3.new("test name", Biosphere::Settings.new({value: "test2"}))
             expect(d.test[:value]).to eq("test2")
-        end        
+            expect(d.name).to eq("test name")            
+        end
 
     end
 
@@ -67,12 +69,12 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = MyDeployment4.new(default_settings)
+            d = MyDeployment4.new("test name")
             d.evaluate_resources
 
             expect(d.node).not_to eq(nil)
             expect(d.node[:foo]).to eq("bar")
-
+            expect(d.name).to eq("test name")
         end
 
         it "can define variable" do
@@ -84,13 +86,13 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new({
-                deployment_name: "test",
+            d = TestDeployment.new("test name", {
                 foo: "bar"
             })
 
             expect(d.export["variable"]["aws_access_key"]).not_to eq(nil)
             expect(d.export["variable"]["aws_secret_key"]["default"]).to eq("bar")
+            expect(d.name).to eq("test name")
 
         end
 
@@ -105,10 +107,11 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(default_settings)
+            d = TestDeployment.new("main")
             d.evaluate_resources()
 
-            expect(d.export["resource"]["type"]["name"][:name]).to eq("one")
+            expect(d.export["resource"]["type"]["main_name"][:name]).to eq("one")
+            expect(d.name).to eq("main")
         end
 
         it "can handle resource setters" do
@@ -130,12 +133,13 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(default_settings)
+            d = TestDeployment.new("main")
             d.evaluate_resources()
 
-            expect(d.export["resource"]["type"]["name"][:foo]).to eq("one")
-            expect(d.export["resource"]["type"]["name"][:bar]).to eq(true)
-        end        
+            expect(d.export["resource"]["type"]["main_name"][:foo]).to eq("one")
+            expect(d.export["resource"]["type"]["main_name"][:bar]).to eq(true)
+            expect(d.name).to eq("main")
+        end
 
         it "can call a helper method in a resource" do
 
@@ -152,11 +156,25 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(default_settings)
+            d = TestDeployment.new("main")
             d.evaluate_resources()
 
-            expect(d.export["resource"]["type"]["name"]).to eq({:foo => 2})
+            expect(d.export["resource"]["type"]["main_name"]).to eq({:foo => 2})
+            expect(d.name).to eq("main")
         end
+
+        it "can lookup output values after" do
+
+            s = Biosphere::Suite.new(Biosphere::State.new)
+            s.load_all("spec/biosphere/suite_test3/")
+            s.evaluate_resources()
+
+            d = s.deployments["main"]
+            expect(d.export["resource"]["type"]["sub1_name"]).to eq({:foo => "file1"})
+            expect(d.export["resource"]["type"]["sub2_name"]).to eq({:foo => "file1"})
+            expect(d.export["resource"]["type"]["main_name"]).to eq({:foo => "file1"})
+
+        end        
     end
     
     describe "state" do
@@ -174,7 +192,7 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(default_settings)
+            d = TestDeployment.new("test name")
             suite.register(d)
             d.evaluate_resources()
 
@@ -196,7 +214,7 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(default_settings)
+            d = TestDeployment.new("test name")
             suite.register(d)
             d.evaluate_resources()
 
@@ -217,7 +235,7 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            d = TestDeployment.new(suite, default_settings)
+            d = TestDeployment.new(suite, "test name")
 
             # Simulate that we load something from a persistent state before evaluating
             d.node[:foo] = "foo"
@@ -226,21 +244,21 @@ RSpec.describe Biosphere::Deployment do
 
             expect(d.node).not_to eq(nil)
             expect(d.node[:foobar]).to eq("foobar")
+            expect(d.name).to eq("test name")
         end
-
     end
 
     describe("expose outputs") do
         it("is possible to expose an output variable") do
             class TestDeployment < Biosphere::Deployment
                 def setup(settings)
-                    output "foobar", "${aws_instance.master.0.public_ip}"
+                    output "foobar", output_of("aws_instance", "master", "0", "public_ip")
                 end
             end
 
-            a = TestDeployment.new(default_settings)
+            a = TestDeployment.new("main")
                 
-            expect(a.export["output"]["foobar"]["value"]).to eq("${aws_instance.master.0.public_ip}")
+            expect(a.export["output"]["main_foobar"]["value"]).to eq("${aws_instance.main_master.0.public_ip}")
             
         end
 
@@ -248,23 +266,23 @@ RSpec.describe Biosphere::Deployment do
 
             class TestDeployment < Biosphere::Deployment
                 def setup(settings)
-                    output "foobar", "${aws_instance.master.0.public_ip}" do |key, value|
-                        node[:foobar] = [key, value]
+                    output "foobar", output_of("aws_instance", "master", "0", "public_ip") do |deployment_name, key, value|
+                        node[:foobar] = [deployment_name, key, value]
                     end
                 end
             end
 
-            a = TestDeployment.new(default_settings)
+            a = TestDeployment.new("main")
             
             a.evaluate_outputs({
-                "foobar" => {
+                "main_foobar" => {
                     "sensitive" => false,
                     "type" => "string",
                     "value" => "hello"
                 }
             })
 
-            expect(a.node[:foobar]).to eq(["foobar", "hello"])
+            expect(a.node[:foobar]).to eq(["main", "foobar", "hello"])
 
         end
 
@@ -290,7 +308,7 @@ RSpec.describe Biosphere::Deployment do
                 end
             end
 
-            a = TestDeployment.new(default_settings)
+            a = TestDeployment.new("test name")
 
             expect(a.export["variable"]["foobar"]["default"]).to eq("Hello, World!")
 

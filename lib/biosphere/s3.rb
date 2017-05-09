@@ -51,6 +51,24 @@ class S3
         end
     end
 
+    def delete_object(path_to_file)
+        filename = path_to_file.split('/')[-1]
+        key = "#{@main_key}/#{filename}"
+        puts "Fetching #{filename} from S3 from #{key}"
+        begin
+            resp = @client.delete_object({
+                :bucket => @bucket_name,
+                :key => key
+            })
+        rescue Aws::S3::Errors::NoSuchKey
+            puts "Couldn't find remote file #{filename} from S3 at #{key}"
+        rescue
+            puts "\nError occurred while deleting file #{path_to_file}."
+            puts "Error: #{$!}"
+            exit 1
+        end
+    end
+
     def set_lock()
         begin
             resp = @client.get_object({

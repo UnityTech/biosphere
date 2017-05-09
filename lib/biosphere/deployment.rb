@@ -10,10 +10,11 @@ class Biosphere
         def initialize(*args)
 
             @parent = nil
-            @name = "unnamed"
+            @name = ""
             if args[0].kind_of?(::Biosphere::Deployment) || args[0].kind_of?(::Biosphere::Suite)
                 @parent = args.shift
-            elsif args[0].kind_of?(String)
+            end
+            if args[0].kind_of?(String)
                 @name = args.shift
             end
 
@@ -36,15 +37,9 @@ class Biosphere
                 "output" => {}
             }
 
+            settings[:deployment_name] = @name
+
             if @parent.is_a?(::Biosphere::Suite)
-                if settings[:deployment_name]
-                    @name = settings[:deployment_name]
-                else
-                    puts "\nYou need to specify :deployment_name in the Deployment settings. For example:"
-                    puts "cluster = AdsDeliveryCluster.new(suite, MyDeliveryTestSettings.new({deployment_name: \"my-delivery-test-cluster\"})\n\n"
-                    raise RuntimeError.new "No :deployment_name specified in Deployment settings"
-                end
-                
                 @parent.register(self)
             elsif @parent
                 @node = @parent.node
@@ -109,6 +104,9 @@ class Biosphere
         end
 
         def resource(type, name, &block)
+            if self.name
+                name = self.name + "_" + name
+            end
             @export["resource"][type.to_s] ||= {}
             if @export["resource"][type.to_s][name.to_s]
                 throw "Tried to create a resource of type #{type} called '#{name}' when one already exists"
@@ -132,13 +130,20 @@ class Biosphere
         end
 
         def output(name, value, &block)
-            @export["output"][name] = {
+            if self.name
+                resource_name = self.name + "_" + name
+            else
+                resource_name = name
+            end
+
+            @export["output"][resource_name] = {
                 "value" => value
             }
 
             if block_given?
                 output = {
                     :name => name,
+                    :resource_name => resource_name,
                     :block => block
                 }
 
@@ -154,8 +159,8 @@ class Biosphere
             end
             
             @outputs.each do |output|
-                value = outputs[output[:name]]
-                instance_exec(output[:name], value["value"], value, &output[:block])
+                value = outputs[output[:resource_name]]
+                instance_exec(self.name, output[:name], value["value"], value, &output[:block])
             end
         end
 
@@ -193,6 +198,17 @@ class Biosphere
 
                 @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
             end
+        end
+
+        def id_of(type,name)
+            "${#{type}.#{name}.id}"
+        end
+
+        def output_of(type, name, *values)
+            if self.name
+                name = self.name + "_" + name
+            end
+            "${#{type}.#{name}.#{values.join(".")}}"
         end
 
         def to_json(pretty=false)
