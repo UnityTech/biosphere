@@ -163,6 +163,26 @@ RSpec.describe Biosphere::Deployment do
             expect(d.name).to eq("main")
         end
 
+        it "can mark a resource into a target group" do
+
+            class TestDeployment < Biosphere::Deployment
+
+                def setup(settings)
+                    resource "type", "name1", "group-1"
+                    resource "type", "name2", "group-1"
+                    resource "type", "name3", "group-2"
+                end
+            end
+
+            d = TestDeployment.new("main")
+            d.evaluate_resources()
+
+            expect(d.target_groups['group-1']).to include('type.main_name1')
+            expect(d.target_groups['group-1']).to include('type.main_name2')
+            expect(d.target_groups['group-1']).not_to include('type.main_name3')
+            expect(d.target_groups['group-2']).to include('type.main_name3')
+        end
+
         it "can lookup output values after" do
 
             s = Biosphere::Suite.new(Biosphere::State.new)

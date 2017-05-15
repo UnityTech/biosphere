@@ -29,4 +29,5 @@ Gem::Specification.new do |s|
   s.add_dependency('aws-sdk', '~> 2')
   s.add_dependency('deep_merge', '1.1.1')
   s.add_dependency('deep_dup', '0.0.3')
+  s.add_dependency('treetop', '1.6.8')
 end

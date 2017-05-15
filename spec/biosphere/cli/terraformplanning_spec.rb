@@ -34,28 +34,75 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name1",
                 :target_group => "group-1",
                 :reason => "group has total 2 resources. Picked this as the first",
-                :marked_for_relaunch => true
+                :action => :relaunch
             })
 
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name3",
                 :target_group => "group-2",
                 :reason => "only member in its group",
-                :marked_for_relaunch => true
+                :action => :relaunch
             })
 
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name2",
                 :target_group => "group-1",
                 :reason => "not selected from this group",
-                :marked_for_relaunch => false
+                :action => :not_picked
             })
 
         end
+
+        it "can handle changes" do
+
+            class TestDeployment < Biosphere::Deployment
+
+                def setup(settings)
+                    resource "type", "name1", "group-1"
+                    resource "type", "name2", "group-1"
+                    resource "type", "name3", "group-2"
+                end
+            end
+
+            d = TestDeployment.new("main")
+            d.evaluate_resources()
+
+            s = Biosphere::CLI::TerraformPlanning.new()
+
+            data = s.parse_terraform_plan_output(%{
+~ type.main_name1
+~ type.main_name2
+~ type.main_name3
+})
+
+            change_plan = s.build_terraform_targetting_plan(d, data)
+            expect(change_plan.items).to include({
+                :resource_name => "type.main_name1",
+                :target_group => "group-1",
+                :reason => "non-destructive change",
+                :action => :change
+            })
+
+            expect(change_plan.items).to include({
+                :resource_name => "type.main_name3",
+                :target_group => "group-2",
+                :reason => "non-destructive change",
+                :action => :change
+            })
+
+            expect(change_plan.items).to include({
+                :resource_name => "type.main_name2",
+                :target_group => "group-1",
+                :reason => "non-destructive change",
+                :action => :change
+            })
+
+        end
+        
 
         it "handles resources which dont belong to any target group" do
 
@@ -82,13 +129,11 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            puts "change_plan"
-            pp change_plan
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name4",
-                :target_group => nil,
-                :reason => "does not belong to any target group",
-                :marked_for_relaunch => true
+                :target_group => "",
+                :reason => :no_target_group,
+                :action => :relaunch
             })
 
         end
@@ -112,14 +157,14 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name4",
-                :target_group => nil,
-                :reason => "does not belong to any target group",
-                :marked_for_relaunch => true
+                :target_group => "",
+                :reason => :no_target_group,
+                :action => :relaunch
             })
 
-            expect(change_plan.length).to equal(1)
+            expect(change_plan.items.length).to equal(1)
         end
 
         it "handles a plan with no changes" do
@@ -143,9 +188,34 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            puts "change plan in handles a plan with no changes"
-            pp change_plan
             expect(change_plan.length).to equal(0)
+        end
+
+        it "handles a plan with ansi colors" do
+
+            class TestDeployment < Biosphere::Deployment
+
+                def setup(settings)
+                    resource "type", "name1", "group-1"
+                    resource "type", "name2", "group-1"
+                    resource "type", "name3", "group-2"
+                    resource "type", "name4"
+                end
+            end
+
+            d = TestDeployment.new("main")
+            d.evaluate_resources()
+
+            s = Biosphere::CLI::TerraformPlanning.new()
+
+            data = s.parse_terraform_plan_output(%{
+\e[0m\e[31m-/+ type.main_name1
+\e[0m\e[0m
+\e[0m\e[32m-/+ type.main_name2
+})
+
+            change_plan = s.build_terraform_targetting_plan(d, data)
+            expect(change_plan.length).to equal(2)
         end
 
         it "handles a resource-to-be-destroyed which does not exists as a resource definition any more" do
@@ -167,12 +237,11 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            puts "change plan in handles resource-to-be-destroyed which does not exists as a resource definition any more"
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name3",
-                :target_group => nil,
+                :target_group => "",
                 :reason => "resource definition has been removed",
-                :marked_for_relaunch => true
+                :action => :destroy
             })
             expect(change_plan.length).to equal(1)
         end
@@ -202,33 +271,72 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
 })
 
             change_plan = s.build_terraform_targetting_plan(d, data)
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name1",
                 :target_group => "group-1",
                 :reason => "new resource",
-                :marked_for_relaunch => true
+                :action => :create
             })
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name2",
                 :target_group => "group-1",
                 :reason => "new resource",
-                :marked_for_relaunch => true
+                :action => :create
             })
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name3",
                 :target_group => "group-2",
                 :reason => "new resource",
-                :marked_for_relaunch => true
+                :action => :create
             })
-            expect(change_plan).to include({
+            expect(change_plan.items).to include({
                 :resource_name => "type.main_name4",
-                :target_group => nil,
+                :target_group => "",
                 :reason => "new resource",
-                :marked_for_relaunch => true
+                :action => :create
             })
             expect(change_plan.length).to equal(4)
         end
     end
+
+    it "can print plan to stdout" do
+
+        class TestDeployment < Biosphere::Deployment
+
+            def setup(settings)
+                resource "type", "name1", "group-1"
+                resource "type", "name2", "group-1"
+                resource "type", "name3", "group-2"
+                resource "type", "name4"
+                resource "type", "name5"
+            end
+        end
+
+        d = TestDeployment.new("main")
+        d.evaluate_resources()
+
+        s = Biosphere::CLI::TerraformPlanning.new()
+
+        data = s.parse_terraform_plan_output(%{
+-/+ type.main_name1
+- type.main_name2
++ type.main_name3
++ type.main_name4
+})
+
+        plan = s.build_terraform_targetting_plan(d, data)
+        out = StringIO.new
+        plan.print(out)
+        puts out.string
+
+        resources = plan.get_resources()
+        expect(resources).to include("type.main_name1")
+        expect(resources).not_to include("type.main_name2")
+        expect(resources).to include("type.main_name3")
+        expect(resources).to include("type.main_name4")
+        expect(resources).not_to include("type.main_name5")
+    end
+    
 
     describe "parsing" do
         it "can parse a terraform output" do
