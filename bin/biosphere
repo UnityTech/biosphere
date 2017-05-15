@@ -203,8 +203,23 @@ elsif ARGV[0] == "commit" && options.src
 
     s3.set_lock()
     s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
-    tf_plan = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir} )
-    puts "\n" + tf_plan
+    tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}  )
+    tfplanning = Biosphere::CLI::TerraformPlanning.new()
+    plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str)
+    if !plan
+        STDERR.puts "Error parsing tf plan output" 
+        s3.release_lock()
+        exit
+    end
+
+    # Print the raw terraform output
+    puts "\n" + tf_plan_str
+
+    # Print our pretty short plan
+    plan.print
+
+    targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
+
     answer = ""
     while answer.empty? || (answer != "y" && answer != "n")
         print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
@@ -219,7 +234,7 @@ elsif ARGV[0] == "commit" && options.src
         #tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
         #puts "\n" + tf_apply
         begin
-            PTY.spawn("terraform apply -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
+            PTY.spawn("terraform apply #{targets} -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
             begin
                 stdout.each { |line| puts line }
                 rescue Errno::EIO

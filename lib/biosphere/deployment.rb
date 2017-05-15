@@ -5,7 +5,7 @@ class Biosphere
 
     class Deployment
 
-        attr_reader :export, :name, :_settings, :feature_manifests
+        attr_reader :export, :name, :_settings, :feature_manifests, :target_groups, :resources
         attr_accessor :state, :node
         def initialize(*args)
 
@@ -56,6 +56,7 @@ class Biosphere
             @actions = {}
             @deployments = []
             @outputs = []
+            @target_groups = {}
 
             if @feature_manifests
                 node[:feature_manifests] = @feature_manifests
@@ -63,6 +64,11 @@ class Biosphere
 
             self.setup(settings)
 
+        end
+
+        def add_resource_to_target_group(resource_type, resource_name, target_group)
+            name = resource_type + "." + resource_name
+            (@target_groups[target_group] ||= []) << name
         end
 
         def setup(settings)
@@ -103,7 +109,7 @@ class Biosphere
             @delayed << delayed_call
         end
 
-        def resource(type, name, &block)
+        def resource(type, name, target_group = nil, &block)
             if self.name
                 name = self.name + "_" + name
             end
@@ -119,10 +125,14 @@ class Biosphere
                 :location => caller[0] + "a"
             }
 
+            if target_group
+                add_resource_to_target_group(type, name, target_group)
+            end
+
             if block_given?
                 resource[:block] = block
             else
-                STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")
+                #STDERR.puts("WARNING: No block set for resource call '#{type}', '#{name}' at #{caller[0]}")
             end
 
             @resources << resource
@@ -194,7 +204,9 @@ class Biosphere
             # And finish with our own resources
             @resources.each do |resource|
                 proxy = ResourceProxy.new(self)
-                proxy.instance_eval(&resource[:block])
+                if resource[:block]
+                    proxy.instance_eval(&resource[:block])
+                end
 
                 @export["resource"][resource[:type].to_s][resource[:name].to_s] = proxy.output
             end
