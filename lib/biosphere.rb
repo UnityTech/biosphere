@@ -12,5 +12,6 @@ require "biosphere/deployment"
 require "biosphere/terraformproxy"
 require "biosphere/suite"
 require "biosphere/cli/terraformplanning"
+require "biosphere/cli/updatemanager"
 require "biosphere/s3"
 
