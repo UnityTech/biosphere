@@ -169,8 +169,19 @@ class Biosphere
             end
             
             @outputs.each do |output|
-                value = outputs[output[:resource_name]]
-                instance_exec(self.name, output[:name], value["value"], value, &output[:block])
+                begin
+                    value = outputs[output[:resource_name]]
+                    instance_exec(self.name, output[:name], value["value"], value, &output[:block])
+                rescue NoMethodError => e
+                    STDERR.puts "Error evaluating output #{output}. error: #{e}"
+                    puts "output:"
+                    pp output
+                    puts "value:"
+                    pp value
+                    puts "outputs:"
+                    pp outputs
+                    STDERR.puts "This is an internal error. You should be able to run biosphere commit again to try to fix this."
+                end
             end
         end
 
@@ -184,8 +195,12 @@ class Biosphere
             end
 
             outputs = tf_state["modules"].first["outputs"]
-
-            evaluate_outputs(outputs)
+            if outputs.length == 0
+                STDERR.puts "WARNING: No outputs found from the terraform state file #{tfstate_filename}. This might be a bug in terraform."
+                STDERR.puts "Try to run \"biosphere commit\" again."
+            else
+                evaluate_outputs(outputs)
+            end
         end
 
         def evaluate_resources()

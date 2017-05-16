@@ -244,6 +244,21 @@ elsif ARGV[0] == "commit" && options.src
             puts "The child process exited!"
         end
 
+        # Refresh outputs to make sure they are available in the state file
+        command_output = ""
+        begin
+            puts "Refreshing terraform outputs"
+            PTY.spawn("terraform refresh -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
+            begin
+                stdout.each { |line| command_output << line }
+                rescue Errno::EIO
+                end
+            end
+        rescue PTY::ChildExited
+            puts "Error executing terraform refresh.:\n"
+            puts command_output
+        end
+
         puts "Loading outputs for #{deployment} from #{state_file}"
         suite.deployments[deployment].load_outputs(state_file)
         state.save()
