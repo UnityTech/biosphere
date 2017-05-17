@@ -29,6 +29,8 @@ class Biosphere
                     return info
                 rescue JSON::ParserError
                     return nil
+                rescue RestClient::Exceptions::OpenTimeout
+                    return nil
                 rescue RestClient::Exceptions::ReadTimeout
                     return nil
                 end
