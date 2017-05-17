@@ -6,10 +6,11 @@ require 'fileutils'
 RSpec.describe Biosphere::CLI::UpdateManager do
 
     it "has a constructor" do
-        s = Biosphere::CLI::UpdateManager.new()
 
-        #info = s.check_for_update("0.2.0")
-        #expect(info).not_to be(nil)
+        info = Biosphere::CLI::UpdateManager::check_for_update("0.2.0")
+        expect(info).not_to be(nil)
+        expect(info[:up_to_date]).to eq(false)
+        expect(info[:current]).to eq("0.2.0")
     end
 
 end

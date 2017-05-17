@@ -1,7 +1,7 @@
 require 'pp'
 require 'treetop'
 require 'colorize'
-require 'net/http'
+require 'rest-client'
 
 class Biosphere
 
@@ -9,23 +9,31 @@ class Biosphere
         class UpdateManager
 
 
-            def check_for_update(version = ::Biosphere::Version)
-                url = URI('https://rubygems.org/api/v1/versions/biosphere/latest.json')
+            def self.check_for_update(current_version = ::Biosphere::Version)
+                begin
+                    response = RestClient::Request.execute(method: :get, url: 'https://rubygems.org/api/v1/versions/biosphere/latest.json', timeout: 1)
 
-                response = get_response_with_redirect(url)
-                pp response
+                    if response.code != 200
+                        return nil
+                    end
 
-                return info
-            end
+                    data = JSON.parse(response.body)
 
-            private
-            def get_response_with_redirect(uri)
-                r = Net::HTTP.get_response(uri)
-                if r.code == "301"
-                    r = Net::HTTP.get_response(URI.parse(r.header['location']))
+                    info = {
+                        latest: data["version"],
+                        current: current_version,
+                    }
+
+                    info[:up_to_date] = Gem::Version.new(info[:current]) == Gem::Version.new(info[:latest])
+
+                    return info
+                rescue JSON::ParserError
+                    return nil
+                rescue RestClient::Exceptions::ReadTimeout
+                    return nil
                 end
-                r
             end
+
         end
     end
 end

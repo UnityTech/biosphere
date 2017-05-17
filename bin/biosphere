@@ -63,6 +63,12 @@ if !STDOUT.isatty
     String.disable_colorization true
 end
 
+update_info = Biosphere::CLI::UpdateManager::check_for_update()
+if !update_info[:up_to_date]
+    STDERR.puts "Notice. There is a new #{update_info[:latest]} biosphere version available. Your current version is #{update_info[:current]}\n".colorize(:yellow)
+end
+
+
 options = BiosphereOpts.parse(ARGV)
 
 if ARGV.length == 0
