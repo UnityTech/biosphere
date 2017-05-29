@@ -31,9 +31,11 @@ class Biosphere
                 @clients = []
 
                 @clients << ::Kubeclient::Client.new("#{hostname}/api" , "v1", ssl_options: ssl_options)
+                @clients << ::Kubeclient::Client.new("#{hostname}/apis/apps/" , "v1beta1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/extensions/" , "v1beta1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/batch/" , "v2alpha1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/storage.k8s.io/" , "v1", ssl_options: ssl_options)
+                @clients << ::Kubeclient::Client.new("#{hostname}/apis/autoscaling/" , "v1", ssl_options: ssl_options)
 
                 @clients.each { |c| c.discover }
             end
@@ -52,7 +54,7 @@ class Biosphere
             def get_client(resource)
                 kind = resource[:kind].underscore_case
                 @clients.each do |c|
-                    if c.instance_variable_get("@entities")[kind]
+                    if c.instance_variable_get("@api_group") + c.instance_variable_get("@api_version") == resource[:apiVersion]
                         return c
                     end
                 end
