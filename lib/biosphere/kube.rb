@@ -71,7 +71,23 @@ class Biosphere
                 end
 
                 ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
-                ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
+                begin
+                    ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
+                rescue RestClient::MethodNotAllowed => e
+                    if !resource[:metadata][:namespace]
+                        puts "Error doing api call: #{e}".colorize(:red)
+                        puts "This might be because you did not specify namespace in your resource: #{resource[:metadata]}".colorize(:yellow)
+                    else 
+                        puts "Error calling API: #{e}"
+                    end
+                    puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
+                    raise e
+
+                rescue RestClient::Exception => e
+                    puts "Error calling API: #{e}"
+                    puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
+                    raise e
+                end
                 return {
                     action: :post,
                     resource: ns_prefix + resource_name + "/#{name}",
