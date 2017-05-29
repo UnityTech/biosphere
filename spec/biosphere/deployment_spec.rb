@@ -209,6 +209,34 @@ RSpec.describe Biosphere::Deployment do
             expect(d.target_groups['group-2']).to include('type.main_name3')
         end
 
+        it "can mark a resource into a target group under sub-deployments" do
+
+            class SubTestDeployment < Biosphere::Deployment
+
+                def setup(settings)
+                    resource "type", "name1", "group-1"
+                    resource "type", "name2", "group-1"
+                    resource "type", "name3", "group-2"
+                end
+            end
+
+            class TestDeployment < Biosphere::Deployment
+
+                def setup(settings)
+                    sub = SubTestDeployment.new(self, "subname")
+                end
+            end
+
+            d = TestDeployment.new(@dummy_suite, "main")
+            d.evaluate_resources()
+
+            puts "target groups: #{d.target_groups}"
+            expect(d.target_groups['group-1']).to include('type.subname_name1')
+            expect(d.target_groups['group-1']).to include('type.subname_name2')
+            expect(d.target_groups['group-1']).not_to include('type.subname_name3')
+            expect(d.target_groups['group-2']).to include('type.subname_name3')
+        end
+
         it "can lookup output values after" do
 
             s = Biosphere::Suite.new(Biosphere::State.new)

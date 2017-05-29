@@ -43,10 +43,14 @@ class Biosphere
 
             if @parent.is_a?(::Biosphere::Suite)
                 @parent.register(self)
+                @target_groups = {}
+
             elsif @parent
                 @node = @parent.node
                 @state = @parent.state
                 @export = @parent.export
+                @target_groups = @parent.target_groups
+
                 @parent.register(self)
                 
             else
@@ -58,7 +62,6 @@ class Biosphere
             @actions = {}
             @deployments = []
             @outputs = []
-            @target_groups = {}
 
             if @feature_manifests
                 node[:feature_manifests] = @feature_manifests
