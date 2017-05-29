@@ -7,8 +7,8 @@ global_settings = {
     s3_bucket: "techops-biosphere-test",
 }
 
-a = SubDeployment.new("subdeployment", global_settings.deep_merge({
-    deployment_name: "subdeployment",
+dummy_suite = Biosphere::Suite.new(Biosphere::State.new)
+a = SubDeployment.new(dummy_suite, "subdeployment", global_settings.deep_merge({
     my: "sub-deployment",
     region: "us-east-1"
 }))

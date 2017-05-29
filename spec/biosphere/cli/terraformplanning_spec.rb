@@ -10,6 +10,9 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
     end
 
     describe "target grouping" do
+        before(:each) do
+            @dummy_suite = Biosphere::Suite.new(Biosphere::State.new())
+        end
 
         it "can figure out if a single target group has more than one destroying change" do
 
@@ -22,7 +25,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -68,7 +71,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -102,7 +105,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
             })
 
         end
-        
+
 
         it "handles resources which dont belong to any target group" do
 
@@ -116,7 +119,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -147,7 +150,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -179,7 +182,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -203,7 +206,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -227,7 +230,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -258,7 +261,7 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
                 end
             end
 
-            d = TestDeployment.new("main")
+            d = TestDeployment.new(@dummy_suite, "main")
             d.evaluate_resources()
 
             s = Biosphere::CLI::TerraformPlanning.new()
@@ -299,44 +302,48 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
         end
     end
 
-    it "can print plan to stdout" do
-
-        class TestDeployment < Biosphere::Deployment
-
-            def setup(settings)
-                resource "type", "name1", "group-1"
-                resource "type", "name2", "group-1"
-                resource "type", "name3", "group-2"
-                resource "type", "name4"
-                resource "type", "name5"
-            end
+    describe "output" do
+        before(:each) do
+            @dummy_suite = Biosphere::Suite.new(Biosphere::State.new())
         end
 
-        d = TestDeployment.new("main")
-        d.evaluate_resources()
+        it "can print plan to stdout" do
+            class TestDeployment < Biosphere::Deployment
 
-        s = Biosphere::CLI::TerraformPlanning.new()
+                def setup(settings)
+                    resource "type", "name1", "group-1"
+                    resource "type", "name2", "group-1"
+                    resource "type", "name3", "group-2"
+                    resource "type", "name4"
+                    resource "type", "name5"
+                end
+            end
 
-        data = s.parse_terraform_plan_output(%{
+            d = TestDeployment.new(@dummy_suite, "main")
+            d.evaluate_resources()
+
+            s = Biosphere::CLI::TerraformPlanning.new()
+
+            data = s.parse_terraform_plan_output(%{
 -/+ type.main_name1
 - type.main_name2
 + type.main_name3
 + type.main_name4
 })
 
-        plan = s.build_terraform_targetting_plan(d, data)
-        out = StringIO.new
-        plan.print(out)
-        puts out.string
+            plan = s.build_terraform_targetting_plan(d, data)
+            out = StringIO.new
+            plan.print(out)
+            puts out.string
 
-        resources = plan.get_resources()
-        expect(resources).to include("type.main_name1")
-        expect(resources).not_to include("type.main_name2")
-        expect(resources).to include("type.main_name3")
-        expect(resources).to include("type.main_name4")
-        expect(resources).not_to include("type.main_name5")
+            resources = plan.get_resources()
+            expect(resources).to include("type.main_name1")
+            expect(resources).not_to include("type.main_name2")
+            expect(resources).to include("type.main_name3")
+            expect(resources).to include("type.main_name4")
+            expect(resources).not_to include("type.main_name5")
+        end
     end
-    
 
     describe "parsing" do
         it "can parse a terraform output" do
@@ -355,7 +362,7 @@ will be destroyed. Cyan entries are data sources to be read.
 
 Note: You didn't specify an "-out" parameter to save this plan, so when
 "apply" is called, Terraform can't guarantee this is what will execute.
-            
+
 ~ aws_eip.garo-kube-test_master-0
     associate_with_private_ip: "172.16.1.131" => "${aws_instance.garo-kube-test_master-0.private_ip}"
     instance:                  "i-054e5beff357482f3" => "${aws_instance.garo-kube-test_master-0.id}"

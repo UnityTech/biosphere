@@ -7,28 +7,30 @@ class Biosphere
 
         attr_reader :export, :name, :_settings, :feature_manifests, :target_groups, :resources
         attr_accessor :state, :node
-        def initialize(*args)
 
+        def initialize(parent, name, settings={})
             @parent = nil
             @name = ""
-            if args[0].kind_of?(::Biosphere::Deployment) || args[0].kind_of?(::Biosphere::Suite)
-                @parent = args.shift
-            end
-            if args[0].kind_of?(String)
-                @name = args.shift
+            if parent.kind_of?(::Biosphere::Deployment) || parent.kind_of?(::Biosphere::Suite)
+                @parent = parent
+            else
+                raise ArgumentError, "Deployment takes a parent Biosphere::Deployment or Biosphere::Suite as it's first parameter"
             end
 
-            settings = {}
+            if name.kind_of?(String) && name.length > 0
+                @name = name
+            else
+                raise ArgumentError, "Deployment takes the deployment name as the first parameter, or as the second parameter if no parent is defined. Name can't be empty."
+            end
+
             @_settings = {}
-            if args[0].kind_of?(Hash)
-                settings = args.shift
+            if settings.kind_of?(Hash)
                 @_settings = settings
-            elsif args[0].kind_of?(::Biosphere::Settings)
-                @_settings = args.shift
+            elsif settings.kind_of?(::Biosphere::Settings)
+                @_settings = settings
                 settings = @_settings.settings
                 @feature_manifests = @_settings.feature_manifests
             end
-
 
             @export = {
                 "provider" => {},

@@ -18,7 +18,9 @@ RSpec.describe Biosphere::TerraformProxy do
                         end
                     end
                 end
-                a = TestDeployment.new("unnamed")
+
+                dummy_suite = Biosphere::Suite.new(Biosphere::State.new)
+                a = TestDeployment.new(dummy_suite, "unnamed")
 
                 a.evaluate_resources()
                 res[:a] = a
