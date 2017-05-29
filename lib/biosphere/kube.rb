@@ -33,6 +33,7 @@ class Biosphere
                 @clients << ::Kubeclient::Client.new("#{hostname}/api" , "v1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/extensions/" , "v1beta1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/batch/" , "v2alpha1", ssl_options: ssl_options)
+                @clients << ::Kubeclient::Client.new("#{hostname}/apis/storage.k8s.io/" , "v1", ssl_options: ssl_options)
 
                 @clients.each { |c| c.discover }
             end
@@ -68,7 +69,6 @@ class Biosphere
                 end
 
                 ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
-                ns_prefix = ns_prefix.empty? ? "namespaces/default/" : ns_prefix
                 ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
                 return {
                     action: :post,
@@ -131,6 +131,12 @@ class Biosphere
                         response = post(resource)
                         puts "Created resource #{response[:resource]}"
                         responses << response
+                    rescue RestClient::NotFound => e
+                        pp e
+                        pp JSON.parse(e.response.body)
+                        puts "404 when applying resources might mean one of the following:"
+                        puts "\t * You're trying to apply a non-namespaced manifest."
+                        puts "\t   Confirm if your manifests metadata should contain a namespace field or not"
                     rescue RestClient::UnprocessableEntity => e
                         pp e
                         pp JSON.parse(e.response.body)
