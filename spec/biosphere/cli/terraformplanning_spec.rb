@@ -404,6 +404,8 @@ Note: You didn't specify an "-out" parameter to save this plan, so when
 
 - aws_instance.garo-kube-test_worker-1
 
+- aws_instance.garo-kube-test_worker-2
+
 - aws_route53_record.garo-kube-test_master-1
 
 ~ aws_route53_record.garo-kube-test_masters
@@ -429,11 +431,13 @@ Plan: 1 to add, 2 to change, 7 to destroy.
 - aws_eip.garo-kube-test_master-1
 -/+ aws_instance.garo-kube-test_master-0
 + aws_instance.garo-kube-test_master-1
+- aws_instance.garo-kube-test_master-2 (deposed)
 }
             data = s.parse_terraform_plan_output(str)
             expect(data[:relaunches]).not_to include("aws_eip.garo-kube-test_master-0")
             expect(data[:relaunches]).to include("aws_eip.garo-kube-test_master-1")
             expect(data[:relaunches]).to include("aws_instance.garo-kube-test_master-0")
+            expect(data[:relaunches]).to include("aws_instance.garo-kube-test_master-2")
             expect(data[:relaunches]).not_to include("aws_instance.garo-kube-test_master-1")
             expect(data[:new_resources]).to include("aws_instance.garo-kube-test_master-1")
         end

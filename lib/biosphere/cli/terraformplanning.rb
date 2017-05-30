@@ -84,7 +84,7 @@ class Biosphere
                 lines.each do |line|
                     # the gsub is to strip possible ansi colors away
                     # the match is to pick the TF notation about how the resource is about to change following the resource name itself
-                    m = line.gsub(/\e\[[0-9;]*m/, "").match(/^([-~+\/]+)\s(.+)$/)
+                    m = line.gsub(/\e\[[0-9;]*m/, "").match(/^([-~+\/]+)\s(\S+)/)
                     if m
                         # If the resource action contains a minus ('-' or '-/+') then
                         # we know that the action will be destructive.
