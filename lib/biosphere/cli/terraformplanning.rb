@@ -39,6 +39,8 @@ class Biosphere
                             out.write "(#{item[:reason]})".colorize(:red)
                         elsif item[:action] == :change
                             out.write "(#{item[:reason]})".colorize(:yellow)
+                        elsif item[:action] == :not_picked
+                            out.write "(#{item[:reason]})".colorize(:yellow)
                         else
                             out.write "(#{item[:reason]}) unknown action: #{item[:action]}".colorize(:red)
                         end
@@ -124,7 +126,7 @@ class Biosphere
                 resource_to_target_group_map = {}
 
                 resources_not_in_any_target_group = {}
-                deployment.resources.each do |resource|
+                deployment.all_resources.each do |resource|
                     belong_to_target_group = false
                     resource_name = resource[:type] + "." + resource[:name]
 
@@ -190,6 +192,7 @@ class Biosphere
                 # Relaunches are more complex: we need to bucket resources based on group, so that we can later pick just one change from each group
                 changes[:relaunches].each do |change|
                     group = resource_to_target_group_map[change]
+                    puts "group #{group} for change #{change}"
                     if group
                         group_changes_map[group] = (group_changes_map[group] ||= []) << change
                     elsif resources_not_in_any_target_group[change]

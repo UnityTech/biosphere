@@ -5,7 +5,7 @@ class Biosphere
 
     class Deployment
 
-        attr_reader :export, :name, :_settings, :feature_manifests, :target_groups, :resources
+        attr_reader :export, :name, :_settings, :feature_manifests, :target_groups, :resources, :all_resources
         attr_accessor :state, :node
 
         def initialize(parent, name, settings={})
@@ -44,11 +44,12 @@ class Biosphere
             if @parent.is_a?(::Biosphere::Suite)
                 @parent.register(self)
                 @target_groups = {}
-
+                @all_resources = []
             elsif @parent
                 @node = @parent.node
                 @state = @parent.state
                 @export = @parent.export
+                @all_resources = @parent.all_resources
                 @target_groups = @parent.target_groups
 
                 @parent.register(self)
@@ -141,6 +142,7 @@ class Biosphere
             end
 
             @resources << resource
+            @all_resources << resource
 
         end
 
