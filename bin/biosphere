@@ -233,9 +233,12 @@ elsif ARGV[0] == "commit" && options.src
     end
 
     # Print the raw terraform output
+    puts "== TERRAFORM PLAN START ==".colorize(:green)
     puts "\n" + tf_plan_str
-
+    puts "==  TERRAFORM PLAN END  ==".colorize(:green)
+    puts "\n"
     # Print our pretty short plan
+    puts "Target group listing:"
     plan.print
 
     targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
@@ -330,4 +333,3 @@ else
     STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
     exit -1
 end
-
