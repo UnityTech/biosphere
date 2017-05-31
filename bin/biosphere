@@ -104,8 +104,13 @@ if options.src
         end
     rescue ::Biosphere::ConfigurationError => e
         STDERR.puts "Configuration Error: #{e}".colorize(:red)
-        STDERR.puts "Relevant configuration part:"
-        ap e.settings
+        if e.explanation
+            STDERR.puts e.explanation
+        end
+        if e.settings
+            STDERR.puts "Relevant configuration part:"
+            ap e.settings
+        end
         exit -1
     end
 
