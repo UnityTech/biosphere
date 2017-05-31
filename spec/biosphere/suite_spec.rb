@@ -44,8 +44,8 @@ RSpec.describe Biosphere::Suite do
             FileUtils.remove_dir("build")
         end
         s.write_json_to("build")
-        expect(JSON.parse(IO.read("build/test1.json.tf"))["resource"]["type"]["test1_name"]).to eq({"foo" => "file1"})
-        expect(JSON.parse(IO.read("build/test2.json.tf"))["resource"]["type"]["test2_name"]).to eq({"foo" => "file2"})
+        expect(JSON.parse(IO.read("build/test1/test1.json.tf"))["resource"]["type"]["test1_name"]).to eq({"foo" => "file1"})
+        expect(JSON.parse(IO.read("build/test2/test2.json.tf"))["resource"]["type"]["test2_name"]).to eq({"foo" => "file2"})
 
         if File.directory?("build")
             FileUtils.remove_dir("build")

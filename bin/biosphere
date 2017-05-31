@@ -164,7 +164,7 @@ if ARGV[0] == "build" && options.src
         count = count + 1
     end
 
-    puts "Wrote #{count} files into #{options.build_dir}"
+    puts "Wrote #{count} files under #{options.build_dir}"
     state.save()
     s3.save("#{options.build_dir}/state.node") unless localmode
 
@@ -244,7 +244,7 @@ elsif ARGV[0] == "commit" && options.src
 
     s3.set_lock()
     s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
-    tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}  )
+    tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}/#{deployment}  )
     tfplanning = Biosphere::CLI::TerraformPlanning.new()
     plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str)
     if !plan
@@ -278,7 +278,7 @@ elsif ARGV[0] == "commit" && options.src
         #tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
         #puts "\n" + tf_apply
         begin
-            PTY.spawn("terraform apply #{targets} -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
+            PTY.spawn("terraform apply #{targets} -state=#{state_file} #{options.build_dir}/#{deployment}") do |stdout, stdin, pid|
             begin
                 stdout.each { |line| puts line }
                 rescue Errno::EIO
@@ -292,7 +292,7 @@ elsif ARGV[0] == "commit" && options.src
         command_output = ""
         begin
             puts "Refreshing terraform outputs"
-            PTY.spawn("terraform refresh -state=#{state_file} #{options.build_dir}") do |stdout, stdin, pid|
+            PTY.spawn("terraform refresh -state=#{state_file} #{options.build_dir}/#{deployment}") do |stdout, stdin, pid|
             begin
                 stdout.each { |line| command_output << line }
                 rescue Errno::EIO

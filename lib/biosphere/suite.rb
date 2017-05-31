@@ -91,9 +91,14 @@ class Biosphere
             end
 
             @deployments.each do |name, deployment|
+                dir = destination_dir + "/" + deployment.name
+                if !File.directory?(dir)
+                    Dir.mkdir(dir)
+                end
+
                 json_name = deployment.name + ".json.tf"
                 str = deployment.to_json(true) + "\n"
-                destination_name = destination_dir + "/" + json_name
+                destination_name = dir + "/" + json_name
                 File.write(destination_name, str)
 
                 yield deployment.name, destination_name, str, deployment if block_given?
