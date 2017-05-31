@@ -97,18 +97,30 @@ if options.src
     end
 
     # We need to load the suite once so that we can find the Biosphere settings
-    if suite.load_all(options.src) == 0 || suite.deployments.size == 0
-        STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
+    begin
+        if suite.load_all(options.src) == 0 || suite.deployments.size == 0
+            STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
+            exit -1
+        end
+    rescue ::Biosphere::ConfigurationError => e
+        STDERR.puts "Configuration Error: #{e}".colorize(:red)
+        STDERR.puts "Relevant configuration part:"
+        ap e.settings
         exit -1
     end
 
-    if suite.biosphere_settings[:s3_bucket].nil? || suite.biosphere_settings[:s3_bucket].empty? ||
-        suite.biosphere_settings[:state_name].nil? || suite.biosphere_settings[:state_name].empty?
-        puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
-        exit 1
+    if suite.biosphere_settings[:local] == true
+        localmode = true
+    else
+        localmode = false
+        if suite.biosphere_settings[:s3_bucket].nil? || suite.biosphere_settings[:s3_bucket].empty? ||
+            suite.biosphere_settings[:state_name].nil? || suite.biosphere_settings[:state_name].empty?
+            puts "\nNo S3 bucket or cluster name defined in configuration, can't continue"
+            exit 1
+        end
+        s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:state_name])
+        s3.retrieve("#{options.build_dir}/state.node")
     end
-    s3 = S3.new(suite.biosphere_settings[:s3_bucket], suite.biosphere_settings[:state_name])
-    s3.retrieve("#{options.build_dir}/state.node")
 
     # This will update the state which is already passed to the suite.
     state.filename = "#{options.build_dir}/state.node"
@@ -149,7 +161,7 @@ if ARGV[0] == "build" && options.src
 
     puts "Wrote #{count} files into #{options.build_dir}"
     state.save()
-    s3.save("#{options.build_dir}/state.node")
+    s3.save("#{options.build_dir}/state.node") unless localmode
 
 elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
@@ -176,7 +188,7 @@ elsif ARGV[0] == "action" && options.src
         STDERR.puts "Could not find action #{ARGV[1]}"
     end
     state.save()
-    s3.save("#{options.build_dir}/state.node")
+    s3.save("#{options.build_dir}/state.node") unless localmode
 
 elsif ARGV[0] == "deployment" && options.src
 
@@ -198,10 +210,14 @@ elsif ARGV[0] == "statereset" && options.src
         state = Biosphere::State.new
         state.filename = "#{options.build_dir}/state.node"
         state.save()
-        s3.save("#{options.build_dir}/state.node")
+        s3.save("#{options.build_dir}/state.node") unless localmode
     end
 
 elsif ARGV[0] == "commit" && options.src
+    if localmode
+        STDERR.puts "commit not supported in local mode (set in Settings :biosphere[:local] = true"
+        exit -1
+    end
 
     if !ARGV[1]
         puts "Please specify deployment name as the second parameter."
@@ -242,7 +258,7 @@ elsif ARGV[0] == "commit" && options.src
     plan.print
 
     targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
-
+    puts "Targets: #{targets}"
     answer = ""
     while answer.empty? || (answer != "y" && answer != "n")
         print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
@@ -292,6 +308,10 @@ elsif ARGV[0] == "commit" && options.src
     s3.release_lock()
 
 elsif ARGV[0] == "destroy" && options.src
+    if localmode
+        STDERR.puts "destroy not supported in local mode (set in Settings :biosphere[:local] = true"
+        exit -1
+    end
 
     if !ARGV[1]
         puts "Please specify deployment name as the second parameter."
@@ -324,9 +344,19 @@ elsif ARGV[0] == "destroy" && options.src
     s3.release_lock()
 
 elsif ARGV[0] == "lock"
+    if localmode
+        STDERR.puts "lock not supported in local mode (set in Settings :biosphere[:local] = true"
+        exit -1
+    end
+
     s3.set_lock()
 
 elsif ARGV[0] == "unlock"
+    if localmode
+        STDERR.puts "unlock not supported in local mode (set in Settings :biosphere[:local] = true"
+        exit -1
+    end
+
     s3.release_lock()
 
 else

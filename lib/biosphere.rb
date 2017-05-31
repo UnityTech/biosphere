@@ -5,6 +5,7 @@ require 'deep_merge'
 
 require "biosphere/ipaddressallocator"
 require "biosphere/version"
+require "biosphere/exceptions"
 require "biosphere/settings"
 require "biosphere/node"
 require "biosphere/state"

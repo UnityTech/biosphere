@@ -81,6 +81,9 @@ class Biosphere
 
             # Finds files from relative path
             def find_files(p)
+                if !$current_biosphere_path_stack
+                    $current_biosphere_path_stack = "."
+                end
                 relative_path = $current_biosphere_path_stack + "/" + p
                 entries = Dir[(relative_path)] - [".", ".."]
                 return entries
