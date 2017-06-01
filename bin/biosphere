@@ -16,6 +16,7 @@ class BiosphereOpts
         options = OpenStruct.new
         options.build_dir = "build"
         options.src = "./"
+        options.force = false
         options.version = ::Biosphere::Version
 
         opt_parser = OptionParser.new do |opts|
@@ -49,6 +50,10 @@ class BiosphereOpts
             opts.on_tail("-v", "--version", "Show version") do
                 puts options.version
                 exit
+            end
+
+            opts.on("--force", "Don't prompt for user input") do
+                options.force = true
             end
 
         end
@@ -136,16 +141,20 @@ if options.src
 
     unless state.node[:deployments][""].nil?
         answer = ""
-        while answer.empty? || (answer != "y" && answer != "n")
-            puts "\e[31mDeployment with an empty name, do you want to clean these out now? [y/n]\e[0m"
-            answer = STDIN.gets.chomp
-        end
+        if !options.force
+            while answer.empty? || (answer != "y" && answer != "n")
+                puts "\e[31mDeployment with an empty name, do you want to clean these out now? [y/n]\e[0m"
+                answer = STDIN.gets.chomp
+            end
 
-        if answer == "n"
-          puts "Remember to clean these out later, this state won't work with Kubernetes"
-        elsif answer == "y"
-          state.node[:deployments].delete("")
-          puts "\e[32mRemoved deployment with empty name\e[0m"
+            if answer == "n"
+            puts "Remember to clean these out later, this state won't work with Kubernetes"
+            elsif answer == "y"
+            state.node[:deployments].delete("")
+            puts "\e[32mRemoved deployment with empty name\e[0m"
+            end
+        else
+            puts "Forcing since --force was set"
         end
     end
 end
@@ -204,9 +213,13 @@ elsif ARGV[0] == "deployment" && options.src
 elsif ARGV[0] == "statereset" && options.src
 
     answer = ""
-    while answer.empty? || (answer != "y" && answer != "n")
-        print "\nAre you sure you want to do a full state reset for #{options.build_dir} y/n: "
-        answer = STDIN.gets.chomp
+    if !options.force
+        while answer.empty? || (answer != "y" && answer != "n")
+            print "\nAre you sure you want to do a full state reset for #{options.build_dir} y/n: "
+            answer = STDIN.gets.chomp
+        end
+    else
+        answer = "y"
     end
 
     if answer == "n"
@@ -244,7 +257,12 @@ elsif ARGV[0] == "commit" && options.src
 
     s3.set_lock()
     s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
-    tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}/#{deployment}  )
+    begin
+        tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}/#{deployment}  )
+    rescue Errno::ENOENT => e
+        STDERR.puts "Could not find terraform. Install with with \"brew install terraform\"".colorize(:red)
+        s3.release_lock()
+    end
     tfplanning = Biosphere::CLI::TerraformPlanning.new()
     plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str)
     if !plan
@@ -265,9 +283,13 @@ elsif ARGV[0] == "commit" && options.src
     targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
     puts "Targets: #{targets}"
     answer = ""
-    while answer.empty? || (answer != "y" && answer != "n")
-        print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
-        answer = STDIN.gets.chomp
+    if !options.force
+        while answer.empty? || (answer != "y" && answer != "n")
+            print "\nDoes the plan look reasonable? (Answering yes will apply the changes) y/n: "
+            answer = STDIN.gets.chomp
+        end
+    else
+        answer = "y"
     end
 
     if answer == "n"
@@ -331,9 +353,13 @@ elsif ARGV[0] == "destroy" && options.src
     s3.set_lock()
     s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
     answer = ""
-    while answer.empty? || (answer != "y" && answer != "n")
-        print "\nYou are about to destroy deployment #{deployment}? (Answering yes will nuke it from the orbit) y/n: "
-        answer = STDIN.gets.chomp
+    if !options.force
+        while answer.empty? || (answer != "y" && answer != "n")
+            print "\nYou are about to destroy deployment #{deployment}? (Answering yes will nuke it from the orbit) y/n: "
+            answer = STDIN.gets.chomp
+        end
+    else
+        answer = "y"
     end
 
     if answer == "n"
