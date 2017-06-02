@@ -9,6 +9,26 @@ require 'colorize'
 require 'biosphere/s3.rb'
 require 'pty'
 
+
+# Asks a question
+# Choises is an array of valid answers, such as ['y', 'n']
+# If optional force is set to true then the first choise option is returned.
+def ask_question(question, choices, force: false, color: :yellow)
+    answer = ""
+    if force
+        puts question + " Forcing since --force is set"
+        return choices.first
+    end
+
+    while answer.empty? || !choices.include?(answer.downcase)
+        puts (question + " [" + choices.join('/') + "]").colorize(color)
+        answer = STDIN.gets.chomp
+    end
+
+    return answer
+end
+
+
 class BiosphereOpts
 
     def self.parse(args)
@@ -139,6 +159,19 @@ if options.src
         state.load()
     end
 
+    destroyed_deployments = state.node[:deployments].keys - suite.deployments.keys
+    if destroyed_deployments.length > 0
+        destroyed_deployments.each do |deployment_name|
+            answer = ask_question("State file has remins of an old deployment #{deployment_name}. Do you want to clean these now?", ['y', 'n'], force: options.force)
+            if answer == "y"
+                puts "Clearing #{deployment_name}"
+                state.node[:deployments].delete(deployment_name)
+            else
+                puts "Leaving #{deployment_name}, this might affect for example action kubectl."
+            end
+        end
+    end
+
     unless state.node[:deployments][""].nil?
         answer = ""
         if !options.force
@@ -148,15 +181,23 @@ if options.src
             end
 
             if answer == "n"
-            puts "Remember to clean these out later, this state won't work with Kubernetes"
+                puts "Remember to clean these out later, this state won't work with Kubernetes"
             elsif answer == "y"
-            state.node[:deployments].delete("")
-            puts "\e[32mRemoved deployment with empty name\e[0m"
+                state.node[:deployments].delete("")
+                puts "\e[32mRemoved deployment with empty name\e[0m"
             end
         else
             puts "Forcing since --force was set"
         end
     end
+end
+
+# If we are doing something which is allowed to modify the state
+if ["build", "action", "commit"].include?(ARGV[0])
+    if !state.node[:biosphere]
+        state.node[:biosphere] = {}
+    end
+    state.node[:biosphere][:version] = ::Biosphere::Version
 end
 
 if ARGV[0] == "build" && options.src
@@ -174,6 +215,8 @@ if ARGV[0] == "build" && options.src
     end
 
     puts "Wrote #{count} files under #{options.build_dir}"
+    state.node[:biosphere][:last_build_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+
     state.save()
     s3.save("#{options.build_dir}/state.node") unless localmode
 
@@ -229,6 +272,9 @@ elsif ARGV[0] == "statereset" && options.src
         state.filename = "#{options.build_dir}/state.node"
         state.save()
         s3.save("#{options.build_dir}/state.node") unless localmode
+        suite.deployments.each do |name, deployment|
+            s3.delete_object()
+        end
     end
 
 elsif ARGV[0] == "commit" && options.src
@@ -327,6 +373,7 @@ elsif ARGV[0] == "commit" && options.src
 
         puts "Loading outputs for #{deployment} from #{state_file}"
         suite.deployments[deployment].load_outputs(state_file)
+        state.node[:biosphere][:last_commit_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
         state.save()
         s3.save("#{options.build_dir}/#{deployment}.tfstate")
         s3.save("#{options.build_dir}/state.node")
@@ -394,3 +441,4 @@ else
     STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
     exit -1
 end
+
