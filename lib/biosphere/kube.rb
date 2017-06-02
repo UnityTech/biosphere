@@ -37,7 +37,13 @@ class Biosphere
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/storage.k8s.io/" , "v1", ssl_options: ssl_options)
                 @clients << ::Kubeclient::Client.new("#{hostname}/apis/autoscaling/" , "v1", ssl_options: ssl_options)
 
-                @clients.each { |c| c.discover }
+                @clients.each do |c|
+                    begin
+                        c.discover
+                    rescue KubeException => e
+                        puts "Could not discover api #{c.api_endpoint} - maybe this kube version is too old."
+                    end
+                end
             end
 
             def get_resource_name(resource)
