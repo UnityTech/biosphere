@@ -1,0 +1,253 @@
+digraph {
+	compound = "true"
+	subgraph "root" {
+		"[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction" [label = "aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction", shape = "box"]
+		"[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-general" [label = "aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-general", shape = "box"]
+		"[root] aws_eip.delivery-staging-us-east-1d_master-0" [label = "aws_eip.delivery-staging-us-east-1d_master-0", shape = "box"]
+		"[root] aws_eip.delivery-staging-us-east-1d_master-1" [label = "aws_eip.delivery-staging-us-east-1d_master-1", shape = "box"]
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_master-role-profile" [label = "aws_iam_instance_profile.delivery-staging-us-east-1d_master-role-profile", shape = "box"]
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-ads-auction" [label = "aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-ads-auction", shape = "box"]
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-general" [label = "aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-general", shape = "box"]
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-0" [label = "aws_instance.delivery-staging-us-east-1d_etcd-0", shape = "box"]
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-1" [label = "aws_instance.delivery-staging-us-east-1d_etcd-1", shape = "box"]
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-2" [label = "aws_instance.delivery-staging-us-east-1d_etcd-2", shape = "box"]
+		"[root] aws_instance.delivery-staging-us-east-1d_master-0" [label = "aws_instance.delivery-staging-us-east-1d_master-0", shape = "box"]
+		"[root] aws_instance.delivery-staging-us-east-1d_master-1" [label = "aws_instance.delivery-staging-us-east-1d_master-1", shape = "box"]
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction" [label = "aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction", shape = "box"]
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general" [label = "aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-0" [label = "aws_route53_record.delivery-staging-us-east-1d_etcd-0", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-1" [label = "aws_route53_record.delivery-staging-us-east-1d_etcd-1", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-2" [label = "aws_route53_record.delivery-staging-us-east-1d_etcd-2", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-0" [label = "aws_route53_record.delivery-staging-us-east-1d_master-0", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-1" [label = "aws_route53_record.delivery-staging-us-east-1d_master-1", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_masters" [label = "aws_route53_record.delivery-staging-us-east-1d_masters", shape = "box"]
+		"[root] aws_route53_record.delivery-staging-us-east-1d_zone_delegation" [label = "aws_route53_record.delivery-staging-us-east-1d_zone_delegation", shape = "box"]
+		"[root] aws_route53_zone.delivery-staging-us-east-1d_main" [label = "aws_route53_zone.delivery-staging-us-east-1d_main", shape = "box"]
+		"[root] aws_security_group.delivery-staging-us-east-1d_cross-array-traffic" [label = "aws_security_group.delivery-staging-us-east-1d_cross-array-traffic", shape = "box"]
+		"[root] aws_security_group.delivery-staging-us-east-1d_etcd" [label = "aws_security_group.delivery-staging-us-east-1d_etcd", shape = "box"]
+		"[root] aws_security_group.delivery-staging-us-east-1d_master" [label = "aws_security_group.delivery-staging-us-east-1d_master", shape = "box"]
+		"[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction" [label = "aws_security_group.delivery-staging-us-east-1d_worker-ads-auction", shape = "box"]
+		"[root] aws_security_group.delivery-staging-us-east-1d_worker-general" [label = "aws_security_group.delivery-staging-us-east-1d_worker-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_cross-array-traffic-passthru" [label = "aws_security_group_rule.delivery-staging-us-east-1d_cross-array-traffic-passthru", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-egress" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-egress", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-self" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-self", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-icmp" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-icmp", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-ingress-ssh" [label = "aws_security_group_rule.delivery-staging-us-east-1d_etcd-ingress-ssh", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-egress" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-allow-egress", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-self" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-allow-self", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-icmp" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-icmp", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-http" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-http", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-https" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-https", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-netdata" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-netdata", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-ssh" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-ssh", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-whitelisted-ingress-tcp-addresses" [label = "aws_security_group_rule.delivery-staging-us-east-1d_master-whitelisted-ingress-tcp-addresses", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-1-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-1-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-general", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-ads-auction" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-ads-auction", shape = "box"]
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-general" [label = "aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-general", shape = "box"]
+		"[root] provider.aws" [label = "provider.aws", shape = "diamond"]
+		"[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction" -> "[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction"
+		"[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-general" -> "[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general"
+		"[root] aws_eip.delivery-staging-us-east-1d_master-0" -> "[root] aws_instance.delivery-staging-us-east-1d_master-0"
+		"[root] aws_eip.delivery-staging-us-east-1d_master-1" -> "[root] aws_instance.delivery-staging-us-east-1d_master-1"
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_master-role-profile" -> "[root] provider.aws"
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-ads-auction" -> "[root] provider.aws"
+		"[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-general" -> "[root] provider.aws"
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-0" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-1" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_instance.delivery-staging-us-east-1d_etcd-2" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_instance.delivery-staging-us-east-1d_master-0" -> "[root] aws_iam_instance_profile.delivery-staging-us-east-1d_master-role-profile"
+		"[root] aws_instance.delivery-staging-us-east-1d_master-0" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_instance.delivery-staging-us-east-1d_master-1" -> "[root] aws_iam_instance_profile.delivery-staging-us-east-1d_master-role-profile"
+		"[root] aws_instance.delivery-staging-us-east-1d_master-1" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction" -> "[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-ads-auction"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_cross-array-traffic"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general" -> "[root] aws_iam_instance_profile.delivery-staging-us-east-1d_role-profile-general"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_cross-array-traffic"
+		"[root] aws_launch_configuration.delivery-staging-us-east-1d_asg-cfg-workers-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-0" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-0"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-0" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-1" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-1"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-1" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-2" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-2"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_etcd-2" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-0" -> "[root] aws_eip.delivery-staging-us-east-1d_master-0"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-0" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-1" -> "[root] aws_eip.delivery-staging-us-east-1d_master-1"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_master-1" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_masters" -> "[root] aws_eip.delivery-staging-us-east-1d_master-0"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_masters" -> "[root] aws_eip.delivery-staging-us-east-1d_master-1"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_masters" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_record.delivery-staging-us-east-1d_zone_delegation" -> "[root] aws_route53_zone.delivery-staging-us-east-1d_main"
+		"[root] aws_route53_zone.delivery-staging-us-east-1d_main" -> "[root] provider.aws"
+		"[root] aws_security_group.delivery-staging-us-east-1d_cross-array-traffic" -> "[root] provider.aws"
+		"[root] aws_security_group.delivery-staging-us-east-1d_etcd" -> "[root] provider.aws"
+		"[root] aws_security_group.delivery-staging-us-east-1d_master" -> "[root] provider.aws"
+		"[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction" -> "[root] provider.aws"
+		"[root] aws_security_group.delivery-staging-us-east-1d_worker-general" -> "[root] provider.aws"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_cross-array-traffic-passthru" -> "[root] aws_security_group.delivery-staging-us-east-1d_cross-array-traffic"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-egress" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-self" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-icmp" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-ingress-ssh" -> "[root] aws_security_group.delivery-staging-us-east-1d_etcd"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-egress" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-self" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-icmp" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-http" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-https" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-netdata" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-ssh" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_master-whitelisted-ingress-tcp-addresses" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_master"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-1-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-ads-auction" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-ads-auction"
+		"[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-general" -> "[root] aws_security_group.delivery-staging-us-east-1d_worker-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-0"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-1"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-2"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_master-0"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_master-1"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_masters"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_zone_delegation"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_cross-array-traffic-passthru"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-egress"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-self"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-icmp"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-ingress-ssh"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-egress"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-self"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-icmp"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-http"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-https"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-netdata"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-ssh"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-whitelisted-ingress-tcp-addresses"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-1-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-ads-auction"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-general"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_etcd-0"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_etcd-1"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_etcd-2"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_master-0"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_master-0-private"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_master-1"
+		"[root] meta.count-boundary (count boundary fixup)" -> "[root] output.delivery-staging-us-east-1d_master-1-private"
+		"[root] output.delivery-staging-us-east-1d_etcd-0" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-0"
+		"[root] output.delivery-staging-us-east-1d_etcd-1" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-1"
+		"[root] output.delivery-staging-us-east-1d_etcd-2" -> "[root] aws_instance.delivery-staging-us-east-1d_etcd-2"
+		"[root] output.delivery-staging-us-east-1d_master-0" -> "[root] aws_eip.delivery-staging-us-east-1d_master-0"
+		"[root] output.delivery-staging-us-east-1d_master-0-private" -> "[root] aws_eip.delivery-staging-us-east-1d_master-0"
+		"[root] output.delivery-staging-us-east-1d_master-1" -> "[root] aws_eip.delivery-staging-us-east-1d_master-1"
+		"[root] output.delivery-staging-us-east-1d_master-1-private" -> "[root] aws_eip.delivery-staging-us-east-1d_master-1"
+		"[root] provider.aws (close)" -> "[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-general"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-0"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-1"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_etcd-2"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_master-0"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_master-1"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_masters"
+		"[root] provider.aws (close)" -> "[root] aws_route53_record.delivery-staging-us-east-1d_zone_delegation"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_cross-array-traffic-passthru"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-array-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-egress"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-etcd"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-master-ssh"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-allow-self"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-icmp"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_etcd-ingress-ssh"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-all-from-array-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-egress"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-allow-self"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-icmp"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-http"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-https"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-netdata"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-ingress-ssh"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_master-whitelisted-ingress-tcp-addresses"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-egress-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-master-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-nodeports-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-allow-self-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-0-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-expose-range-1-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-icmp-general"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-ads-auction"
+		"[root] provider.aws (close)" -> "[root] aws_security_group_rule.delivery-staging-us-east-1d_worker-ingress-ssh-general"
+		"[root] provider.aws" -> "[root] var.aws_access_key"
+		"[root] provider.aws" -> "[root] var.aws_secret_key"
+		"[root] root" -> "[root] meta.count-boundary (count boundary fixup)"
+		"[root] root" -> "[root] provider.aws (close)"
+	}
+}

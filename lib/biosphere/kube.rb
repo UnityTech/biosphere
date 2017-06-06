@@ -84,14 +84,18 @@ class Biosphere
                         puts "Error doing api call: #{e}".colorize(:red)
                         puts "This might be because you did not specify namespace in your resource: #{resource[:metadata]}".colorize(:yellow)
                     else 
-                        puts "Error calling API: #{e}"
+                        puts "Error calling API (on RestClient::MethodNotAllowed): #{e}"
                     end
                     puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
+                    puts "Dumpin resource request:"
+                    pp resource.to_h.to_json
                     raise e
 
                 rescue RestClient::Exception => e
-                    puts "Error calling API: #{e}"
+                    puts "Error calling API (on RestClient::Exception rescue): #{e}"
                     puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
+                    puts "Dumpin resource request:"
+                    pp resource.to_h.to_json
                     raise e
                 end
                 return {

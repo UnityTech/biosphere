@@ -309,14 +309,18 @@ elsif ARGV[0] == "commit" && options.src
         STDERR.puts "Could not find terraform. Install with with \"brew install terraform\"".colorize(:red)
         s3.release_lock()
     end
+
+    tf_graph_str = %x( terraform graph #{options.build_dir}/#{deployment} )
+
     tfplanning = Biosphere::CLI::TerraformPlanning.new()
-    plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str)
+    plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str, tf_graph_str)
     if !plan
         STDERR.puts "Error parsing tf plan output" 
         s3.release_lock()
         exit
     end
 
+    
     # Print the raw terraform output
     puts "== TERRAFORM PLAN START ==".colorize(:green)
     puts "\n" + tf_plan_str
@@ -327,7 +331,6 @@ elsif ARGV[0] == "commit" && options.src
     plan.print
 
     targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
-    puts "Targets: #{targets}"
     answer = ""
     if !options.force
         while answer.empty? || (answer != "y" && answer != "n")

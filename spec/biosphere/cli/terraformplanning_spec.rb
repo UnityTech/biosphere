@@ -9,6 +9,133 @@ RSpec.describe Biosphere::CLI::TerraformPlanning do
         s = Biosphere::CLI::TerraformPlanning.new()
     end
 
+    describe "dependency graph" do
+
+        it "can connect vertices by name" do
+
+            graph = ::Biosphere::TerraformGraph::Graph.new
+            a = graph.push_name "a"
+            b = graph.push_name "b"
+            c = graph.push_name "c"
+            d = graph.push_name "d"
+
+            expect(a).to eq(1)
+            expect(b).to eq(2)
+            expect(c).to eq(3)
+            expect(d).to eq(4)
+
+            graph.connect_mutually("a", "b", 7)
+            graph.connect_mutually("a", "c", 9)
+            graph.connect_mutually("c", "d", 2)
+
+            puts "printing graph"
+            pp graph
+            expect(graph.length_between("a", "c")).to eq(9)
+            expect(graph.neighbors("a")).to eq(["b", "c"])
+            expect(graph.dijkstra("a", "d")[:distance]).to eq(11)
+            expect(graph.dijkstra("a", "d")[:path]).to eq(["a", "c", "d"])
+        end
+
+        it "can parse lines" do
+            graph = ::Biosphere::TerraformGraph.new
+
+            expect(graph.parse_line('"[root] foo" -> "[root] bar"')).to eq({:type => :edge, :from => "foo", :to => "bar"})
+            expect(graph.parse_line('"[root] root" -> "[root] provider.aws (close)"')).to eq({:type => :edge, :from => "root", :to => "provider.aws"})
+            expect(graph.parse_line('"[root] root (derp derp)" -> "[root] provider.aws (close)"')).to eq({:type => :edge, :from => "root", :to => "provider.aws"})
+
+            expect(graph.parse_line('"[root] foo.bar" [label = "foo.bar", shape = "box"]')).to eq({:type => :node, :name => "foo.bar"})
+
+            expect(graph.parse_line('"[root] meta.count-boundary (count boundary fixup)" -> "[root] aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction"')).to eq({:type => :edge, :from => "meta.count-boundary", :to => "aws_autoscaling_group.delivery-staging-us-east-1d_asg-workers-ads-auction"})
+        end
+
+        it "can parse dependency graph" do
+
+            data = File.read("spec/biosphere/digraph.dot")
+
+            graph = Biosphere::TerraformGraph.new
+            graph.load(data)
+
+            l = graph.get_blacklist_by_dependency("aws_instance.delivery-staging-us-east-1d_master-0")
+
+            expect(l).to include("root")
+            expect(l).to include("aws_eip.delivery-staging-us-east-1d_master-0")
+        end
+
+        it "can filter terraform plan based on the graph" do
+            items = []
+
+            items << {
+                :resource_name => "master-0",
+                :target_group => "group-1",
+                :reason => "selected",
+                :action => :relaunch
+            }
+
+            items << {
+                :resource_name => "eip.master-0",
+                :target_group => "group-1",
+                :reason => "non-destructive change",
+                :action => :change
+            }
+            items << {
+                :resource_name => "master-1",
+                :target_group => "group-1",
+                :reason => "not selected",
+                :action => :not_picked
+            }
+            items << {
+                :resource_name => "eip.master-1",
+                :target_group => "group-1",
+                :reason => "non-destructive change",
+                :action => :change
+            }
+            graph = Biosphere::TerraformGraph.new
+            graph.load('
+            "[root] eip.master-0" -> "[root] master-0"
+            "[root] eip.master-1" -> "[root] master-1"
+            "[root] root" -> "[root] eip.master-0"
+            "[root] root" -> "[root] eip.master-1"
+            ')
+
+            plan = Biosphere::CLI::TerraformPlanning::TerraformPlan.new
+            plan.items = items
+
+            new_plan = graph.filter_tf_plan(plan)
+
+            #
+            # root -> eip.master-0 -> master-0 (all selected)
+            # root -> eip.master-1 -> master-1 (master-1 selected, eip.master-1 should be culled)
+            expect(new_plan.items).to include({
+                :resource_name => "master-0",
+                :target_group => "group-1",
+                :reason => "selected",
+                :action => :relaunch
+            })
+
+            expect(new_plan.items).to include({
+                :resource_name => "eip.master-0",
+                :target_group => "group-1",
+                :reason => "non-destructive change",
+                :action => :change
+            })
+
+            expect(new_plan.items).to include({
+                :resource_name => "master-1",
+                :target_group => "group-1",
+                :reason => "not selected",
+                :action => :not_picked
+            })
+
+            expect(new_plan.items).to include({
+                :resource_name => "eip.master-1",
+                :target_group => "group-1",
+                :reason => "not selected as dependent on master-1",
+                :action => :not_picked
+            })
+        end
+
+    end
+
     describe "target grouping" do
         before(:each) do
             @dummy_suite = Biosphere::Suite.new(Biosphere::State.new())
