@@ -429,7 +429,6 @@ class Biosphere
                 # Relaunches are more complex: we need to bucket resources based on group, so that we can later pick just one change from each group
                 changes[:relaunches].each do |change|
                     group = resource_to_target_group_map[change]
-                    puts "group #{group} for change #{change}"
                     if group
                         group_changes_map[group] = (group_changes_map[group] ||= []) << change
                     elsif resources_not_in_any_target_group[change]

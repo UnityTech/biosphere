@@ -273,7 +273,7 @@ elsif ARGV[0] == "statereset" && options.src
         state.save()
         s3.save("#{options.build_dir}/state.node") unless localmode
         suite.deployments.each do |name, deployment|
-            s3.delete_object()
+            s3.delete_object("#{name}.tfstate")
         end
     end
 
@@ -302,9 +302,10 @@ elsif ARGV[0] == "commit" && options.src
     end
 
     s3.set_lock()
-    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
+    state_file = "#{options.build_dir}/#{deployment}.tfstate"
+    s3.retrieve(state_file)
     begin
-        tf_plan_str = %x( terraform plan -state=#{options.build_dir}/#{deployment}.tfstate -out #{options.build_dir}/plan #{options.build_dir}/#{deployment}  )
+        tf_plan_str = %x( terraform plan -state=#{state_file} #{options.build_dir}/#{deployment}  )
     rescue Errno::ENOENT => e
         STDERR.puts "Could not find terraform. Install with with \"brew install terraform\"".colorize(:red)
         s3.release_lock()
@@ -320,7 +321,11 @@ elsif ARGV[0] == "commit" && options.src
         exit
     end
 
-    
+    targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
+    puts "Targets: #{targets}"
+
+    tf_plan_str = %x( terraform plan #{targets} -state=#{state_file} -out #{options.build_dir}/plan #{options.build_dir}/#{deployment}  )
+
     # Print the raw terraform output
     puts "== TERRAFORM PLAN START ==".colorize(:green)
     puts "\n" + tf_plan_str
@@ -330,7 +335,6 @@ elsif ARGV[0] == "commit" && options.src
     puts "Target group listing:"
     plan.print
 
-    targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
     answer = ""
     if !options.force
         while answer.empty? || (answer != "y" && answer != "n")
@@ -345,11 +349,8 @@ elsif ARGV[0] == "commit" && options.src
         puts "\nOk, will not proceed with commit"
     elsif answer == "y"
         puts "\nApplying the changes (this may take several minutes)"
-        state_file = "#{options.build_dir}/#{deployment}.tfstate"
-        #tf_apply = %x( terraform apply -state=#{state_file} #{options.build_dir})
-        #puts "\n" + tf_apply
         begin
-            PTY.spawn("terraform apply #{targets} -state=#{state_file} #{options.build_dir}/#{deployment}") do |stdout, stdin, pid|
+            PTY.spawn("terraform apply -state-out=#{state_file} #{options.build_dir}/plan") do |stdout, stdin, pid|
             begin
                 stdout.each { |line| puts line }
                 rescue Errno::EIO
@@ -378,8 +379,9 @@ elsif ARGV[0] == "commit" && options.src
         suite.deployments[deployment].load_outputs(state_file)
         state.node[:biosphere][:last_commit_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
         state.save()
-        s3.save("#{options.build_dir}/#{deployment}.tfstate")
+        s3.save(state_file)
         s3.save("#{options.build_dir}/state.node")
+        #File.delete("#{options.build_dir}/plan")
     end
 
     s3.release_lock()
