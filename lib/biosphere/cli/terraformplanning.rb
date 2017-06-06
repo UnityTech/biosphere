@@ -94,7 +94,7 @@ class Biosphere
             def dijkstra(src_name, dst_name = nil)
                 src = @map[src_name]
                 dst = @map[dst_name]
-q
+
                 distances = {}
                 previouses = {}
                 self.each do |vertex|
