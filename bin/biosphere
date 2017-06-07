@@ -176,24 +176,7 @@ if ["build", "action", "commit"].include?(ARGV[0])
 end
 
 if ARGV[0] == "build" && options.src
-    suite.evaluate_resources()
-
-    if !File.directory?(options.build_dir)
-        STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
-        exit(-1)
-    end
-
-    count = 0
-    suite.write_json_to(options.build_dir) do |file_name, destination, str, deployment|
-        puts "Wrote #{str.length} bytes from #{file_name} to #{destination} (#{deployment.export["resource"].length} resources)"
-        count = count + 1
-    end
-
-    puts "Wrote #{count} files under #{options.build_dir}"
-    state.node[:biosphere][:last_build_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-    state.save()
-    s3.save("#{options.build_dir}/state.node") unless localmode
+    Biosphere::CLI::Build::build(suite, s3, options.build_dir)
 
 elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
