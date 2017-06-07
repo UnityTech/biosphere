@@ -195,18 +195,7 @@ elsif ARGV[0] == "deployment" && options.src
     end
 
 elsif ARGV[0] == "statereset" && options.src
-    answer = Biosphere::CLI::Utils::ask_question("\nAre you sure you want to do a full state reset for #{options.build_dir}", ["y", "n"], force: options.force)
-    if answer == "n"
-        puts "\nOk, will not proceed with state reset"
-    elsif answer == "y"
-        state = Biosphere::State.new
-        state.filename = "#{options.build_dir}/state.node"
-        state.save()
-        s3.save("#{options.build_dir}/state.node") unless localmode
-        suite.deployments.each do |name, deployment|
-            s3.delete_object("#{name}.tfstate")
-        end
-    end
+    Biosphere::CLI::StateReset::statereset(suite, s3, options.build_dir)
 
 elsif ARGV[0] == "commit" && options.src
     Biosphere::CLI::Commit::commit(suite, s3, options.build_dir)
