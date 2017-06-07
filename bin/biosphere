@@ -153,17 +153,7 @@ if options.src
     end
 
     unless state.node[:deployments][""].nil?
-        if !options.force
-            answer = Biosphere::CLI::Utils::ask_question("Deployment with an empty name, do you want to clean these out now?", ["y", "n"], color: :red)
-            if answer == "n"
-                puts "Remember to clean these out later, this state won't work with Kubernetes"
-            elsif answer == "y"
-                state.node[:deployments].delete("")
-                puts "Removed deployment with empty name".colorize(:green)
-            end
-        else
-            puts "Forcing since --force was set"
-        end
+        puts "State contains deployments with empty names. Remember to clean these out with rename-deployment, this state won't work with Kubernetes".colorize(:red)
     end
 end
 
