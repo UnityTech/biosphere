@@ -33,7 +33,7 @@ class S3
     def retrieve(path_to_file)
         filename = path_to_file.split('/')[-1]
         key = "#{@main_key}/#{filename}"
-        puts "Fetching #{filename} from S3 from #{key}"
+        puts "Fetching #{filename} from S3 from s3://#{@bucket_name}/#{key} (#{ENV['AWS_REGION']})"
         begin
             resp = @client.get_object({
                 :bucket => @bucket_name,
