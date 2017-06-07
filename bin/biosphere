@@ -98,12 +98,12 @@ options = BiosphereOpts.parse(ARGV)
 
 if ARGV.length == 0
     STDERR.puts "No action spesified. Use -h to get help."
-    exit -1
+    exit(-1)
 end
 
 if !File.directory?(options.src)
     STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
-    exit -1
+    exit(-1)
 end
 
 if options.build_dir
@@ -125,7 +125,7 @@ if options.src
     begin
         if suite.load_all(options.src) == 0 || suite.deployments.size == 0
             STDERR.puts "No files found. Are you in the right directory where your biosphere .rb files are?"
-            exit -1
+            exit(-1)
         end
     rescue ::Biosphere::ConfigurationError => e
         STDERR.puts "Configuration Error: #{e}".colorize(:red)
@@ -136,7 +136,7 @@ if options.src
             STDERR.puts "Relevant configuration part:"
             ap e.settings
         end
-        exit -1
+        exit(-1)
     end
 
     if suite.biosphere_settings[:local] == true
@@ -154,7 +154,7 @@ if options.src
 
     # This will update the state which is already passed to the suite.
     state.filename = "#{options.build_dir}/state.node"
-     if File.exists?(state.filename)
+    if File.exists?(state.filename)
         puts "Loading state from #{state.filename}"
         state.load()
     end
@@ -205,7 +205,7 @@ if ARGV[0] == "build" && options.src
 
     if !File.directory?(options.build_dir)
         STDERR.puts "Directory #{options.build_dir} is not a directory or it doesn't exists."
-        exit -1
+        exit(-1)
     end
 
     count = 0
@@ -237,7 +237,7 @@ elsif ARGV[0] == "action" && options.src
         suite.actions.each do |key, value|
             puts "\t#{key}"
         end
-        exit -1
+        exit(-1)
     end
 
     if suite.call_action(ARGV[1], context)
@@ -280,7 +280,7 @@ elsif ARGV[0] == "statereset" && options.src
 elsif ARGV[0] == "commit" && options.src
     if localmode
         STDERR.puts "commit not supported in local mode (set in Settings :biosphere[:local] = true"
-        exit -1
+        exit(-1)
     end
 
     if !ARGV[1]
@@ -289,16 +289,16 @@ elsif ARGV[0] == "commit" && options.src
         suite.deployments.each do |name, deployment|
             puts "\t#{name}"
         end
-        exit -1
+        exit(-1)
     end
     deployment = ARGV[1]
     if !suite.deployments[deployment]
         puts "Deployment #{deployment} not found!"
         puts "Available deployments:"
-        suite.deployments.each do |name, deployment|
+        suite.deployments.each do |name, suite_deployment|
             puts "\t#{name}"
         end
-        exit -1
+        exit(-1)
     end
 
     s3.set_lock()
@@ -351,8 +351,8 @@ elsif ARGV[0] == "commit" && options.src
         puts "\nApplying the changes (this may take several minutes)"
         begin
             PTY.spawn("terraform apply -state-out=#{state_file} #{options.build_dir}/plan") do |stdout, stdin, pid|
-            begin
-                stdout.each { |line| puts line }
+                begin
+                  stdout.each { |line| puts line }
                 rescue Errno::EIO
                 end
             end
@@ -365,8 +365,8 @@ elsif ARGV[0] == "commit" && options.src
         begin
             puts "Refreshing terraform outputs"
             PTY.spawn("terraform refresh -state=#{state_file} #{options.build_dir}/#{deployment}") do |stdout, stdin, pid|
-            begin
-                stdout.each { |line| command_output << line }
+                begin
+                    stdout.each { |line| command_output << line }
                 rescue Errno::EIO
                 end
             end
@@ -389,16 +389,16 @@ elsif ARGV[0] == "commit" && options.src
 elsif ARGV[0] == "destroy" && options.src
     if localmode
         STDERR.puts "destroy not supported in local mode (set in Settings :biosphere[:local] = true"
-        exit -1
+        exit(-1)
     end
 
     if !ARGV[1]
         puts "Please specify deployment name as the second parameter."
         puts "Available deployments:"
-        suite.deployments.each do |name, deployment|
+        suite.deployments.each do |name, suite_deployment|
             puts "\t#{name}"
         end
-        exit -1
+        exit(-1)
     end
     deployment = ARGV[1]
 
@@ -429,7 +429,7 @@ elsif ARGV[0] == "destroy" && options.src
 elsif ARGV[0] == "lock"
     if localmode
         STDERR.puts "lock not supported in local mode (set in Settings :biosphere[:local] = true"
-        exit -1
+        exit(-1)
     end
 
     s3.set_lock()
@@ -437,13 +437,12 @@ elsif ARGV[0] == "lock"
 elsif ARGV[0] == "unlock"
     if localmode
         STDERR.puts "unlock not supported in local mode (set in Settings :biosphere[:local] = true"
-        exit -1
+        exit(-1)
     end
 
     s3.release_lock()
 
 else
     STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
-    exit -1
+    exit(-1)
 end
-
