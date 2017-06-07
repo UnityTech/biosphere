@@ -229,35 +229,7 @@ elsif ARGV[0] == "commit" && options.src
     Biosphere::CLI::Commit::commit(suite, s3, options.build_dir)
 
 elsif ARGV[0] == "destroy" && options.src
-    if localmode
-        STDERR.puts "destroy not supported in local mode (set in Settings :biosphere[:local] = true"
-        exit(-1)
-    end
-
-    if !ARGV[1]
-        puts "Please specify deployment name as the second parameter."
-        puts "Available deployments:"
-        suite.deployments.each do |name, suite_deployment|
-            puts "\t#{name}"
-        end
-        exit(-1)
-    end
-    deployment = ARGV[1]
-
-    s3.set_lock()
-    s3.retrieve("#{options.build_dir}/#{deployment}.tfstate")
-    answer = Biosphere::CLI::Utils::ask_question("\nYou are about to destroy deployment #{deployment}? (Answering yes will nuke it from the orbit)", ["y", "n"], force: options.force)
-    if answer == "n"
-        puts "\nAborted!"
-    elsif answer == "y"
-        puts "\nDestroying deployment #{deployment} (this may take several minutes)"
-        tf_apply = %x( terraform destroy -force -state=#{options.build_dir}/#{deployment}.tfstate #{options.build_dir})
-        puts "\n" + tf_apply
-        s3.save("#{options.build_dir}/#{deployment}.tfstate")
-        s3.save("#{options.build_dir}/state.node")
-    end
-
-    s3.release_lock()
+    Biosphere::CLI::Destroy::destroy(suite, s3, options.build_dir, ARGV[1])
 
 elsif ARGV[0] == "lock"
     if localmode
