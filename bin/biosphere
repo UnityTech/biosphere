@@ -166,7 +166,7 @@ if ["build", "action", "commit"].include?(ARGV[0])
 end
 
 if ARGV[0] == "build" && options.src
-    Biosphere::CLI::Build::build(suite, s3, options.build_dir)
+    Biosphere::CLI::Build::build(suite, s3, options.build_dir, force: options.force)
 
 elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
@@ -185,13 +185,13 @@ elsif ARGV[0] == "deployment" && options.src
     end
 
 elsif ARGV[0] == "statereset" && options.src
-    Biosphere::CLI::StateReset::statereset(suite, s3, options.build_dir)
+    Biosphere::CLI::StateReset::statereset(suite, s3, options.build_dir, force: options.force)
 
 elsif ARGV[0] == "commit" && options.src
-    Biosphere::CLI::Commit::commit(suite, s3, options.build_dir)
+    Biosphere::CLI::Commit::commit(suite, s3, options.build_dir, force: options.force)
 
 elsif ARGV[0] == "destroy" && options.src
-    Biosphere::CLI::Destroy::destroy(suite, s3, options.build_dir, ARGV[1])
+    Biosphere::CLI::Destroy::destroy(suite, s3, options.build_dir, ARGV[1], force: options.force)
 
 elsif ARGV[0] == "lock"
     if localmode
