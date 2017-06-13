@@ -34,7 +34,9 @@ class Biosphere
                 end
 
                 puts "Wrote #{count} files under #{build_dir}"
-                suite.state.node[:biosphere][:last_build_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+                unless suite.state.node[:biosphere].nil?
+                    suite.state.node[:biosphere][:last_build_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+                end
 
                 suite.state.save()
                 s3.save("#{build_dir}/state.node") unless localmode
