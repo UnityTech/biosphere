@@ -31,9 +31,9 @@ class Biosphere
                     exit(-1)
                 end
 
-                if suite.call_action(ARGV[1], context)
+                if suite.call_action(action, context)
                 else
-                    STDERR.puts "Could not find action #{ARGV[1]}"
+                    STDERR.puts "Could not find action #{action}"
                 end
                 suite.state.save()
                 s3.save("#{build_dir}/state.node") unless localmode
