@@ -188,7 +188,7 @@ elsif ARGV[0] == "statereset" && options.src
     Biosphere::CLI::StateReset::statereset(suite, s3, options.build_dir, force: options.force)
 
 elsif ARGV[0] == "commit" && options.src
-    Biosphere::CLI::Commit::commit(suite, s3, options.build_dir, force: options.force)
+    Biosphere::CLI::Commit::commit(suite, s3, options.build_dir, ARGV[1],  force: options.force)
 
 elsif ARGV[0] == "destroy" && options.src
     Biosphere::CLI::Destroy::destroy(suite, s3, options.build_dir, ARGV[1], force: options.force)
