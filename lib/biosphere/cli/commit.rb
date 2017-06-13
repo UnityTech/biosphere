@@ -8,7 +8,7 @@ require 'pty'
 class Biosphere
     class CLI
         class Commit
-            def self.commit(suite, s3, build_dir, localmode: false, force: false)
+            def self.commit(suite, s3, build_dir, deployment, localmode: false, force: false)
                 if !suite.kind_of?(::Biosphere::Suite)
                     raise ArgumentError, "Committing needs a proper suite as the first argument"
                 end
@@ -23,15 +23,15 @@ class Biosphere
                     exit(-1)
                 end
 
-                if !ARGV[1]
+                if !deployment
                     puts "Please specify deployment name as the second parameter."
                     puts "Available deployments:"
-                    suite.deployments.each do |name, deployment|
+                    suite.deployments.each do |name, suite_deployment|
                         puts "\t#{name}"
                     end
                     exit(-1)
                 end
-                deployment = ARGV[1]
+                
                 if !suite.deployments[deployment]
                     puts "Deployment #{deployment} not found!"
                     puts "Available deployments:"

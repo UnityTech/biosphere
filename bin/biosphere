@@ -166,7 +166,7 @@ if ["build", "action", "commit"].include?(ARGV[0])
 end
 
 if ARGV[0] == "build" && options.src
-    Biosphere::CLI::Build::build(suite, s3, options.build_dir, force: options.force)
+    Biosphere::CLI::Build::build(suite, s3, options.build_dir, ARGV[1], force: options.force)
 
 elsif ARGV[0] == "plan" && options.src
     suite.evaluate_plans()
