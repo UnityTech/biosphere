@@ -8,13 +8,17 @@ require 'pty'
 class Biosphere
     class CLI
         class Commit
-            def self.commit(suite, s3, build_dir, deployment, localmode: false, force: false)
+            def self.commit(suite, s3, build_dir, deployment, terraform: Biosphere::CLI::TerraformUtils.new(), localmode: false, force: false)
                 if !suite.kind_of?(::Biosphere::Suite)
                     raise ArgumentError, "Committing needs a proper suite as the first argument"
                 end
                 
                 if !s3.kind_of?(S3)
                     raise ArgumentError, "Committing requires an s3 client as the second argument"
+                end
+                
+                if !terraform.kind_of?(::Biosphere::CLI::TerraformUtils)
+                    raise ArgumentError, "Committing requires a TerraformUtils as the third argument"
                 end
                 
                 localmode = suite.biosphere_settings[:local] || localmode
@@ -45,13 +49,13 @@ class Biosphere
                 state_file = "#{build_dir}/#{deployment}.tfstate"
                 s3.retrieve(state_file)
                 begin
-                    tf_plan_str = %x( terraform plan -state=#{state_file} #{build_dir}/#{deployment}  )
+                    tf_plan_str = terraform.get_plan(state_file, build_dir, deployment)
                 rescue Errno::ENOENT
                     STDERR.puts "Could not find terraform. Install with with \"brew install terraform\"".colorize(:red)
                     s3.release_lock()
                 end
 
-                tf_graph_str = %x( terraform graph #{build_dir}/#{deployment} )
+                tf_graph_str = terraform.get_graph(build_dir, deployment)
 
                 tfplanning = Biosphere::CLI::TerraformPlanning.new()
                 plan = tfplanning.generate_plan(suite.deployments[deployment], tf_plan_str, tf_graph_str)
@@ -64,7 +68,7 @@ class Biosphere
                 targets = plan.get_resources.collect { |x| "-target=#{x}" }.join(" ")
                 puts "Targets: #{targets}"
 
-                tf_plan_str = %x( terraform plan #{targets} -state=#{state_file} -out #{build_dir}/plan #{build_dir}/#{deployment}  )
+                tf_plan_str = terraform.write_plan(targets, state_file, build_dir, deployment)
 
                 # Print the raw terraform output
                 puts "== TERRAFORM PLAN START ==".colorize(:green)
@@ -80,35 +84,16 @@ class Biosphere
                     puts "\nOk, will not proceed with commit"
                 elsif answer == "y"
                     puts "\nApplying the changes (this may take several minutes)"
-                    begin
-                        PTY.spawn("terraform apply -state-out=#{state_file} #{build_dir}/plan") do |stdout, stdin, pid|
-                            begin
-                              stdout.each { |line| puts line }
-                            rescue Errno::EIO
-                            end
-                        end
-                    rescue PTY::ChildExited
-                        puts "The child process exited!"
-                    end
+                    terraform.apply(state_file, build_dir)
 
                     # Refresh outputs to make sure they are available in the state file
-                    command_output = ""
-                    begin
-                        puts "Refreshing terraform outputs"
-                        PTY.spawn("terraform refresh -state=#{state_file} #{build_dir}/#{deployment}") do |stdout, stdin, pid|
-                            begin
-                                stdout.each { |line| command_output << line }
-                            rescue Errno::EIO
-                            end
-                        end
-                    rescue PTY::ChildExited
-                        puts "Error executing terraform refresh.:\n"
-                        puts command_output
-                    end
+                    command_output = terraform.refresh(state_file, build_dir, deployment)
 
                     puts "Loading outputs for #{deployment} from #{state_file}"
                     suite.deployments[deployment].load_outputs(state_file)
-                    suite.state.node[:biosphere][:last_commit_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+                    unless suite.state.node[:biosphere].nil?
+                      suite.state.node[:biosphere][:last_commit_time] = Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+                    end
                     suite.state.save()
                     s3.save(state_file)
                     s3.save("#{build_dir}/state.node")

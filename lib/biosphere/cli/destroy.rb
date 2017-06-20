@@ -8,7 +8,7 @@ require 'pty'
 class Biosphere
     class CLI
         class Destroy
-            def self.destroy(suite, s3, build_dir, deployment, localmode: false, force: false)
+            def self.destroy(suite, s3, build_dir, deployment, terraform: Biosphere::CLI::TerraformUtils.new(), localmode: false, force: false)
                 
                 if !suite.kind_of?(::Biosphere::Suite)
                     raise ArgumentError, "Destroy needs a proper suite as the first argument"

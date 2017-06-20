@@ -5,8 +5,8 @@ require 'fileutils'
 require 'tmpdir'
 
 class S3
-  def initialize(*args)
-    
+  def initialize(build_dir)
+    @build_dir = build_dir
   end
   
   def retrieve(path)
@@ -23,6 +23,11 @@ class S3
   
   def save(file)
     puts "saved #{file}"
+  end
+  
+  def delete_object(file)
+    FileUtils.rm("#{@build_dir}/#{file}")
+    puts "removed #{file}"
   end
 end
 
@@ -48,7 +53,7 @@ class Biosphere
             end
             
             def apply(state_file, build_dir)
-                FileUtils.touch("#{build_dir}/")
+                FileUtils.touch("#{state_file}")
                 ""
             end
             
@@ -60,7 +65,7 @@ class Biosphere
     end 
 end
 
-RSpec.describe Biosphere::CLI::Commit do
+RSpec.describe Biosphere::CLI::StateReset do
 
     before(:each) do
         @tmpdir = Dir.mktmpdir
@@ -72,17 +77,18 @@ RSpec.describe Biosphere::CLI::Commit do
 
     after(:each) do
       if @tmpdir && @tmpdir =~ /^\/tmp\/d[0-9]*/ && @tmpdir.length > 10
-         FileUtils.rm_r(@tmpdir)
+         #FileUtils.rm_r(@tmpdir)
       end
     end
 
     it "can be run, generating the expected files" do
       Biosphere::Deployment.new(@dummy_suite, "testdeployment")
-      Biosphere::CLI::Build.build(@dummy_suite, S3.new(), @build_dir, force: true)
-      Biosphere::CLI::Commit.commit(@dummy_suite, S3.new(), @build_dir, "testdeployment", terraform: Biosphere::CLI::TerraformUtils.new(), force: true)
+      Biosphere::CLI::Build.build(@dummy_suite, S3.new(@build_dir), @build_dir, force: true)
+      Biosphere::CLI::Commit.commit(@dummy_suite, S3.new(@build_dir), @build_dir, "testdeployment", terraform: Biosphere::CLI::TerraformUtils.new(), force: true)
+      Biosphere::CLI::StateReset.statereset(@dummy_suite, S3.new(@build_dir), @build_dir, force: true)
       
       expect(File.exist?(@dummy_suite.state.filename) && File.size(@dummy_suite.state.filename) > 5).to be true
       expect(Dir.exists?("#{@build_dir}/testdeployment")).to be true
-      expect(File.exist?("#{@build_dir}/testdeployment/testdeployment.json.tf") && File.size("#{@build_dir}/testdeployment/testdeployment.json.tf") > 5).to be true
+      expect(File.exist?("#{@build_dir}/testdeployment/testdeployment.tfstate")).to be false
     end
 end
