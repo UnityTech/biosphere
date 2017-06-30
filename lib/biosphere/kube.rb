@@ -26,6 +26,8 @@ end
 class Biosphere
     module Kube
 
+
+
         class Client
             def initialize(hostname, ssl_options)
                 @clients = []
@@ -77,8 +79,9 @@ class Biosphere
                 end
 
                 ns_prefix = client.build_namespace_prefix(resource[:metadata][:namespace])
+                body = JSON.pretty_generate(resource.to_h)
                 begin
-                    ret =  client.rest_client[ns_prefix + resource_name].post(resource.to_h.to_json, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
+                    ret =  client.rest_client[ns_prefix + resource_name].post(body, { 'Content-Type' => 'application/json' }.merge(client.instance_variable_get("@headers")))
                 rescue RestClient::MethodNotAllowed => e
                     if !resource[:metadata][:namespace]
                         puts "Error doing api call: #{e}".colorize(:red)
@@ -88,7 +91,11 @@ class Biosphere
                     end
                     puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
                     puts "Dumpin resource request:"
-                    pp resource.to_h.to_json
+                    pp body
+                    raise e
+
+                rescue RestClient::BadRequest => e
+                    handle_bad_request(client, e, body, ns_prefix, resource_name)
                     raise e
 
                 rescue RestClient::Exception => e
@@ -179,14 +186,58 @@ class Biosphere
 
                     begin
                         responses << put(update_resource)
+                    rescue RestClient::BadRequest => e
+                        handle_bad_request(client, e, body, ns_prefix, resource_name)
+                        raise e
                     rescue RestClient::Exception => e
                         puts "Error updating resource: #{e} #{e.class}"
                         pp JSON.parse(e.response)
-                    rescue RestClient::Exception => e
-                        puts "Misc exception: #{e}, #{e.class}, #{e.response}"
                     end
                     
                     return responses
+                end
+            end
+
+            def print_error_location(lines, linenumber)
+                start_line = [0, linenumber - 3].max
+                end_line = [lines.length - 1, linenumber + 3].min
+                lines[start_line..end_line].each_with_index do |line, num|
+                    num += start_line
+                    if num == linenumber
+                        STDERR.printf("%04d>  %s\n".red, num, line)
+                    else
+                        STDERR.printf("%04d|  %s\n", num, line)
+                    end
+                end
+            end
+
+            def handle_bad_request(client, e, body, ns_prefix, resource_name)
+                puts "Error calling API (on RestClient::BadRequest rescue): #{e}"
+                puts "rest_client: #{ns_prefix + resource_name}, client: #{client.rest_client[ns_prefix + resource_name]}"
+
+                begin
+                    msg = JSON.parse(e.http_body)
+                    if msg["message"]
+                        m = msg["message"].match(/\[pos ([0-9]+?)\]:\s?(.+)/)
+                        if m
+                            error_pos = m[1].to_i
+                            if error_pos < body.length
+                                # Find the line number where the error is
+                                line_number = 0
+                                for pos in 0..body.length - 1
+                                    if body[pos] == "\n"
+                                        line_number += 1
+                                    end
+                                    if pos >= m[1].to_i
+                                        break
+                                    end
+                                end
+                                print_error_location(body.split("\n"), line_number)
+                            end
+                        end
+                    end
+                rescue
+                    puts "Error message from body #{e.http_body}"
                 end
             end
 
@@ -305,7 +356,6 @@ class Biosphere
             end
             return new_version
         end
-
 
     end
 end
