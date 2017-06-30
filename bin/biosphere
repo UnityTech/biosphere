@@ -89,7 +89,7 @@ if !STDOUT.isatty
 end
 
 update_info = Biosphere::CLI::UpdateManager::check_for_update()
-if !update_info[:up_to_date]
+if update_info && !update_info[:up_to_date]
     STDERR.puts "Notice. There is a new #{update_info[:latest]} biosphere version available. Your current version is #{update_info[:current]}\nUse \"gem install biosphere\" to update".colorize(:yellow)
 end
 
