@@ -173,22 +173,7 @@ if options.src
     end
 
     unless state.node[:deployments][""].nil?
-        answer = ""
-        if !options.force
-            while answer.empty? || (answer != "y" && answer != "n")
-                puts "\e[31mDeployment with an empty name, do you want to clean these out now? [y/n]\e[0m"
-                answer = STDIN.gets.chomp
-            end
-
-            if answer == "n"
-                puts "Remember to clean these out later, this state won't work with Kubernetes"
-            elsif answer == "y"
-                state.node[:deployments].delete("")
-                puts "\e[32mRemoved deployment with empty name\e[0m"
-            end
-        else
-            puts "Forcing since --force was set"
-        end
+        puts "State contains deployments with empty names. Remember to clean these out with rename-deployment, this state won't work with Kubernetes".colorize(:red)
     end
 end
 
@@ -426,6 +411,9 @@ elsif ARGV[0] == "destroy" && options.src
 
     s3.release_lock()
 
+elsif ARGV[0] == "rename-deployment"
+    Biosphere::CLI::RenameDeployment::renamedeployment(suite, s3, options.build_dir, ARGV[1], ARGV[2], force: options.force)
+
 elsif ARGV[0] == "lock"
     if localmode
         STDERR.puts "lock not supported in local mode (set in Settings :biosphere[:local] = true"
@@ -446,4 +434,3 @@ else
     STDERR.puts "\nERROR: Unknown command #{ARGV[0]}. Maybe you wanted to do: \"biosphere action #{ARGV[0]}\"?"
     exit -1
 end
-
