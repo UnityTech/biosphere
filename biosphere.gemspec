@@ -31,4 +31,5 @@ Gem::Specification.new do |s|
   s.add_dependency('deep_dup', '0.0.3')
   s.add_dependency('treetop', '1.6.8')
   s.add_dependency('rest-client', '2.0.2')
+  s.add_dependency('jsonpath', '0.8.5')
 end
