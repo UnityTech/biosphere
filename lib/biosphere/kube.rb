@@ -139,7 +139,7 @@ class Biosphere
             def get_client(resource)
                 kind = resource["kind"].underscore_case
                 @clients.each do |c|
-                    if c.instance_variable_get("@api_group") + c.instance_variable_get("@api_version") == resource[:apiVersion]
+                    if c.instance_variable_get("@api_group") + c.instance_variable_get("@api_version") == resource["apiVersion"]
                         return c
                     end
                 end
@@ -236,7 +236,7 @@ class Biosphere
             #  2.1) If a new resource: issue a POST
             #  2.2) If resource exists: merge existing resource with the KubeResource and issue a PUT (update)
             def apply_resource(kuberesource)
-                resource = kuberesource.resource
+                resource = kuberesource.document
                 name = resource["metadata"]["name"]
                 responses = []
                 not_found = false
